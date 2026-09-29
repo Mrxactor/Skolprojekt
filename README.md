@@ -48,3 +48,12 @@ GitHub Pages ska publicera direkt från:
 
 - Branch: `main`
 - Folder: `/ (root)`
+
+
+## Lärarvy
+
+När `teacher_view_setup.sql` har körts i Supabase finns lärarvyn här:
+
+https://mrxactor.github.io/Skolprojekt/larare.html
+
+Lärarvyn kräver en separat lärarkod och visar varje grupps färdiga prompt i läsbart format.
