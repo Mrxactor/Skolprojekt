@@ -156,7 +156,7 @@
       <div id="promptOutput"></div>
       <div class="actions">
         <button class="primary" onclick="copyPrompt()">📋 Kopiera prompt</button>
-        <button class="secondary" onclick="downloadPrompt()">⬇️ Ladda ner prompt</button>
+        <button class="secondary" onclick="downloadTemplate()">⬇️ Ladda ner mallen</button>
       </div>
     </section>
 
@@ -238,18 +238,86 @@ Beskriv sedan vilka sidor appen behöver och vad man kan göra på varje sida.`;
     }
   }
 
-  function downloadPrompt(){
-    const text = buildPromptText();
-    const appName = raw("name") || raw("groupName") || "min-app-prompt";
-    const safeName = appName
-      .replace(/[^a-zA-Z0-9åäöÅÄÖ_-]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "min-app-prompt";
+  function downloadTemplate(){
+    const template = `APP-IDÉ – MIN EGEN MALL
 
-    const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
+Grupp/namn:
+____________________________
+
+Deltagare:
+1. ________________________
+2. ________________________
+3. ________________________
+
+Appens namn:
+____________________________
+
+Min app-idé:
+Vad ska appen göra?
+____________________________
+____________________________
+
+Målgrupp:
+Vem ska använda appen?
+____________________________
+____________________________
+
+Problemet:
+Vilket problem ska appen lösa?
+____________________________
+____________________________
+
+Funktioner:
+Skriv 3–5 saker man ska kunna göra i appen.
+1. ________________________
+2. ________________________
+3. ________________________
+4. ________________________
+5. ________________________
+
+Design:
+Stil: ______________________
+Färger/tema: _______________
+
+FÄRDIG PROMPT-MALL
+
+Vi vill bygga en enkel app.
+
+Appens namn:
+[skriv appens namn]
+
+Vår idé:
+[beskriv idén]
+
+Målgrupp:
+[skriv vem appen är till för]
+
+Problemet appen ska lösa:
+[beskriv problemet]
+
+Funktioner appen ska ha:
+[skriv funktionerna]
+
+Design:
+Stil: [skriv stil]
+Färger/tema: [skriv färger]
+
+Skapa appen så att den är:
+- enkel att förstå
+- lätt att använda
+- tydlig för barn
+- byggd med stora knappar och enkel text
+- uppdelad i tydliga sidor eller delar
+
+Börja med att förklara hur appen skulle fungera.
+Beskriv sedan vilka sidor appen behöver och vad man kan göra på varje sida.
+`;
+
+    const blob = new Blob([template], {type:"text/plain;charset=utf-8"});
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = safeName + "-prompt.txt";
+    link.download = "app-ide-mall.txt";
     document.body.appendChild(link);
     link.click();
     link.remove();
