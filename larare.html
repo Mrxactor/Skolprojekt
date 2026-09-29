@@ -72,11 +72,8 @@
         <label for="teacherCode">Lärarkod</label>
         <input id="teacherCode" name="password" type="password"
                autocomplete="current-password" placeholder="Skriv lärarkoden" />
-        <label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-top:12px">
-          <input id="rememberTeacher" type="checkbox" style="width:auto;margin:0" />
-          Kom ihåg lärarkoden på den här enheten
-        </label>
         <div class="actions">
+          <button class="secondary" type="button" onclick="saveTeacherCode()">💾 Spara lärarkod</button>
           <button class="primary" type="submit">Öppna lärarvyn</button>
         </div>
       </form>
@@ -138,12 +135,6 @@ async function loadSubmissions(){
     }
 
     const rows = await res.json();
-
-    if(document.getElementById("rememberTeacher").checked){
-      localStorage.setItem("savedTeacherCode", code);
-    }else{
-      localStorage.removeItem("savedTeacherCode");
-    }
 
     status.className = "ok";
     status.textContent = "Inloggad.";
@@ -237,10 +228,24 @@ async function deleteSubmission(id, groupName){
   }
 }
 
+function saveTeacherCode(){
+  const code = document.getElementById("teacherCode").value.trim();
+  const status = document.getElementById("status");
+
+  if(!code){
+    status.className = "error";
+    status.textContent = "Skriv lärarkoden först.";
+    return;
+  }
+
+  localStorage.setItem("savedTeacherCode", code);
+  status.className = "ok";
+  status.textContent = "✅ Lärarkoden är sparad på den här enheten.";
+}
+
 const savedTeacherCode = localStorage.getItem("savedTeacherCode");
 if(savedTeacherCode){
   document.getElementById("teacherCode").value = savedTeacherCode;
-  document.getElementById("rememberTeacher").checked = true;
 }
 
 document.getElementById("teacherLoginForm").addEventListener("submit", e => {
