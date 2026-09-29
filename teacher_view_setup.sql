@@ -75,3 +75,24 @@ $$;
 
 revoke all on function public.get_app_ide_submissions(text) from public;
 grant execute on function public.get_app_ide_submissions(text) to anon;
+
+
+create or replace function public.delete_app_ide_submission(p_code text, p_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- Återanvänd samma lärarkodskontroll som lärarvyn.
+  perform 1
+  from public.get_app_ide_submissions(p_code)
+  limit 1;
+
+  delete from public.app_ide_submissions
+  where id = p_id;
+end;
+$$;
+
+revoke all on function public.delete_app_ide_submission(text, uuid) from public;
+grant execute on function public.delete_app_ide_submission(text, uuid) to anon;
