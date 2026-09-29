@@ -72,6 +72,10 @@
         <label for="teacherCode">Lärarkod</label>
         <input id="teacherCode" name="password" type="password"
                autocomplete="current-password" placeholder="Skriv lärarkoden" />
+        <label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-top:12px">
+          <input id="rememberTeacher" type="checkbox" style="width:auto;margin:0" />
+          Kom ihåg lärarkoden på den här enheten
+        </label>
         <div class="actions">
           <button class="primary" type="submit">Öppna lärarvyn</button>
         </div>
@@ -134,6 +138,13 @@ async function loadSubmissions(){
     }
 
     const rows = await res.json();
+
+    if(document.getElementById("rememberTeacher").checked){
+      localStorage.setItem("savedTeacherCode", code);
+    }else{
+      localStorage.removeItem("savedTeacherCode");
+    }
+
     status.className = "ok";
     status.textContent = "Inloggad.";
     document.getElementById("teacherView").classList.remove("hidden");
@@ -224,6 +235,12 @@ async function deleteSubmission(id, groupName){
     status.className = "error";
     status.textContent = "Kunde inte radera inlämningen.";
   }
+}
+
+const savedTeacherCode = localStorage.getItem("savedTeacherCode");
+if(savedTeacherCode){
+  document.getElementById("teacherCode").value = savedTeacherCode;
+  document.getElementById("rememberTeacher").checked = true;
 }
 
 document.getElementById("teacherLoginForm").addEventListener("submit", e => {
