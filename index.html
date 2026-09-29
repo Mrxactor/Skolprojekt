@@ -286,7 +286,6 @@ Beskriv sedan vilka sidor appen behöver och vad man kan göra på varje sida.`;
         headers:{
           "Content-Type":"application/json",
           "apikey":SUPABASE_PUBLISHABLE_KEY,
-          "Authorization":`Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
           "Prefer":"return=minimal"
         },
         body:JSON.stringify(data)
