@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Min app-idé – eget verktyg</title>
+  <style>
+    :root{
+      --bg:#f7f8fc; --card:#fff; --text:#1f2937; --muted:#64748b;
+      --primary:#4f46e5; --primary2:#7c3aed; --border:#e2e8f0;
+      --success:#047857; --warning:#92400e;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Arial,Helvetica,sans-serif;
+      background:linear-gradient(180deg,#eef2ff 0%,var(--bg) 30%);
+      color:var(--text);
+    }
+    .wrap{max-width:900px;margin:0 auto;padding:28px 16px 60px}
+    header{text-align:center;margin-bottom:24px}
+    h1{margin:0 0 10px;font-size:clamp(2rem,5vw,3.4rem)}
+    .lead{color:var(--muted);font-size:1.1rem;max-width:720px;margin:0 auto;line-height:1.6}
+    .tip{background:#ecfeff;border:1px solid #a5f3fc;padding:14px 16px;border-radius:14px;margin:20px 0}
+    .grid{display:grid;gap:16px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 8px 24px rgba(15,23,42,.06)}
+    .step{display:inline-block;background:#eef2ff;color:var(--primary);padding:5px 10px;border-radius:999px;font-weight:700;font-size:.85rem;margin-bottom:8px}
+    h2{margin:4px 0 8px;font-size:1.3rem}
+    p.help{color:var(--muted);margin-top:0;line-height:1.5}
+    label{display:block;font-weight:700;margin:12px 0 7px}
+    input,textarea,select{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:12px;font-size:1rem;background:#fff}
+    textarea{min-height:100px;resize:vertical}
+    .members{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media(max-width:650px){.members{grid-template-columns:1fr}}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+    button{border:none;border-radius:12px;padding:12px 16px;font-size:1rem;font-weight:700;cursor:pointer}
+    .primary{background:linear-gradient(135deg,var(--primary),var(--primary2));color:white}
+    .save{background:#047857;color:white}
+    .secondary{background:#e2e8f0;color:#0f172a}
+    .result{margin-top:20px;background:#0f172a;color:#f8fafc;border-radius:18px;padding:18px}
+    .result h2{margin-top:0}
+    #promptOutput{white-space:pre-wrap;line-height:1.6;font-family:Consolas,monospace;font-size:.96rem}
+    .status{display:none;margin-top:16px;padding:14px 16px;border-radius:12px;font-weight:700}
+    .status.success{display:block;background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+    .status.warning{display:block;background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+    footer{text-align:center;color:var(--muted);margin-top:28px;font-size:.9rem}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>🚀 Bygg din app-idé</h1>
+      <p class="lead">
+        Använd den här mallen för dina egna app-idéer. Fyll i frågorna och skapa
+        en färdig prompt som du kan kopiera till ett AI-verktyg.
+      </p>
+    </header>
+
+    <div class="tip">
+      <strong>Privat verktyg:</strong> Det du skriver här skickas inte till läraren.
+      Dina svar sparas bara lokalt i den här webbläsaren.
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <span class="step">Gruppen</span>
+        <h2>Vilka är med i gruppen?</h2>
+        <p class="help">Skriv gruppens namn eller nummer och namnen på högst tre deltagare.</p>
+
+        <label for="groupName">Gruppnamn eller gruppnummer</label>
+        <input id="groupName" placeholder="Exempel: Grupp 4 eller Appbyggarna" />
+
+        <div class="members">
+          <div>
+            <label for="member1">Deltagare 1</label>
+            <input id="member1" placeholder="Namn" />
+          </div>
+          <div>
+            <label for="member2">Deltagare 2</label>
+            <input id="member2" placeholder="Namn" />
+          </div>
+          <div>
+            <label for="member3">Deltagare 3</label>
+            <input id="member3" placeholder="Namn" />
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <span class="step">Steg 1</span>
+        <h2>Vad är er idé?</h2>
+        <p class="help">Tänk på något som skulle kunna bli enklare, roligare eller smartare.</p>
+        <label for="idea">Vår app-idé</label>
+        <textarea id="idea" placeholder="Exempel: En app som hjälper elever att komma ihåg sina läxor."></textarea>
+      </section>
+
+      <section class="card">
+        <span class="step">Steg 2</span>
+        <h2>Vem ska använda appen?</h2>
+        <label for="users">Målgrupp</label>
+        <input id="users" placeholder="Exempel: Elever i årskurs 4–6" />
+      </section>
+
+      <section class="card">
+        <span class="step">Steg 3</span>
+        <h2>Vilket problem löser appen?</h2>
+        <p class="help">Beskriv varför någon skulle vilja använda appen.</p>
+        <label for="problem">Problemet</label>
+        <textarea id="problem" placeholder="Exempel: Många glömmer vilka läxor de har och när de ska vara klara."></textarea>
+      </section>
+
+      <section class="card">
+        <span class="step">Steg 4</span>
+        <h2>Vad ska man kunna göra?</h2>
+        <p class="help">Skriv ungefär 3–5 saker som appen ska kunna göra.</p>
+        <label for="features">Funktioner</label>
+        <textarea id="features" placeholder="Exempel:
+- Lägga till läxor
+- Välja datum
+- Kryssa av färdiga läxor
+- Få en påminnelse"></textarea>
+      </section>
+
+      <section class="card">
+        <span class="step">Steg 5</span>
+        <h2>Hur ska appen se ut?</h2>
+        <label for="style">Stil</label>
+        <select id="style">
+          <option>Färgglad och lekfull</option>
+          <option>Enkel och tydlig</option>
+          <option>Modern</option>
+          <option>Som ett spel</option>
+          <option>Mörk och cool</option>
+        </select>
+        <label for="colors">Färger eller tema</label>
+        <input id="colors" placeholder="Exempel: blått, grönt och stora knappar" />
+      </section>
+
+      <section class="card">
+        <span class="step">Steg 6</span>
+        <h2>Vad ska appen heta?</h2>
+        <label for="name">Appens namn</label>
+        <input id="name" placeholder="Exempel: Läxhjälparen" />
+      </section>
+    </div>
+
+    <div class="actions">
+      <button class="primary" onclick="buildPrompt()">✨ Skapa vår app-prompt</button>
+      <button class="secondary" onclick="clearForm()">Rensa</button>
+    </div>
+
+    <section class="result" id="resultBox" style="display:none;">
+      <h2>Er färdiga prompt</h2>
+      <div id="promptOutput"></div>
+      <div class="actions">
+        <button class="primary" onclick="copyPrompt()">📋 Kopiera prompt</button>
+      </div>
+    </section>
+
+    <footer>Eget app-idéverktyg • Fungerar direkt i webbläsaren • Ingen inloggning behövs</footer>
+  </div>
+
+<script>
+  const fieldIds = [
+    "groupName","member1","member2","member3","idea","users",
+    "problem","features","style","colors","name"
+  ];
+
+  function val(id){
+    const el = document.getElementById(id);
+    return el.value.trim() || "Inte bestämt ännu";
+  }
+
+  function raw(id){
+    return document.getElementById(id).value.trim();
+  }
+
+  function buildPromptText(){
+    return `Vi vill bygga en enkel app.
+
+Grupp:
+${val("groupName")}
+
+Deltagare:
+1. ${val("member1")}
+2. ${val("member2")}
+3. ${val("member3")}
+
+Appens namn:
+${val("name")}
+
+Vår idé:
+${val("idea")}
+
+Målgrupp:
+${val("users")}
+
+Problemet appen ska lösa:
+${val("problem")}
+
+Funktioner appen ska ha:
+${val("features")}
+
+Design:
+Stil: ${val("style")}
+Färger/tema: ${val("colors")}
+
+Skapa appen så att den är:
+- enkel att förstå
+- lätt att använda
+- tydlig för barn
+- byggd med stora knappar och enkel text
+- uppdelad i tydliga sidor eller delar
+
+Börja med att förklara hur appen skulle fungera.
+Beskriv sedan vilka sidor appen behöver och vad man kan göra på varje sida.`;
+  }
+
+  function buildPrompt(){
+    document.getElementById("promptOutput").textContent = buildPromptText();
+    document.getElementById("resultBox").style.display = "block";
+    document.getElementById("resultBox").scrollIntoView({behavior:"smooth"});
+  }
+
+  async function copyPrompt(){
+    const text = buildPromptText();
+    try{
+      await navigator.clipboard.writeText(text);
+      alert("Prompten är kopierad!");
+    }catch{
+      alert("Markera texten och kopiera den manuellt.");
+    }
+  }
+
+  function saveDraft(){
+    const draft = {};
+    fieldIds.forEach(id => draft[id] = document.getElementById(id).value);
+    localStorage.setItem("appIdeCurrentDraft", JSON.stringify(draft));
+  }
+
+  function loadDraft(){
+    const saved = localStorage.getItem("appIdeCurrentDraft");
+    if(!saved) return;
+    try{
+      const draft = JSON.parse(saved);
+      fieldIds.forEach(id => {
+        if(draft[id] !== undefined) document.getElementById(id).value = draft[id];
+      });
+    }catch{}
+  }
+
+  function clearForm(){
+    document.querySelectorAll("input,textarea").forEach(el => el.value = "");
+    document.getElementById("style").selectedIndex = 0;
+    document.getElementById("resultBox").style.display = "none";
+    localStorage.removeItem("appIdeCurrentDraft");
+  }
+
+  fieldIds.forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener("input", saveDraft);
+    el.addEventListener("change", saveDraft);
+  });
+
+  loadDraft();
+</script>
+</body>
+</html>
