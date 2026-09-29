@@ -35,7 +35,7 @@ Eleverna får bara skicka in svar. De kan inte läsa andra gruppers inlämningar
 
 Lärarens Supabase-projekt:
 
-https://supabase.com/dashboard/project/otlnhxfrprhcqrrbjjpr/editor
+https://supabase.com/dashboard/project/mytbxohrlwprlgmudnsg/editor
 
 ## Filer
 
