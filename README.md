@@ -2,9 +2,11 @@
 
 Ett enkelt verktyg för elever i årskurs 4 som lär dem att tänka från idé till app.
 
-## Live elevsida
+## GitHub Pages
 
-https://bygg-din-app-arskurs4.lovable.app
+När GitHub Pages är aktiverat från `main` / `root` används denna adress:
+
+https://mrxactor.github.io/Skolprojekt/
 
 ## Så fungerar övningen
 
@@ -37,11 +39,12 @@ https://supabase.com/dashboard/project/otlnhxfrprhcqrrbjjpr/editor
 
 ## Filer
 
-- `index.html` – komplett fristående elevsida
+- `index.html` – komplett elevsida
 - `supabase_setup.sql` – databasschema och RLS-policy
 
-## Hosting
+## Publicering
 
-Den publika elevsidan körs just nu via Lovable.
+GitHub Pages ska publicera direkt från:
 
-`index.html` ligger också i detta repo och kan användas med GitHub Pages senare.
+- Branch: `main`
+- Folder: `/ (root)`
