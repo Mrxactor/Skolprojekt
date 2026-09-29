@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lärarvy – Bygg din app-idé</title>
+  <style>
+    :root{
+      --bg:#f7f8fc; --card:#fff; --text:#1f2937; --muted:#64748b;
+      --primary:#4f46e5; --primary2:#7c3aed; --border:#e2e8f0;
+      --success:#047857; --danger:#b91c1c;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Arial,Helvetica,sans-serif;
+      background:linear-gradient(180deg,#eef2ff 0%,var(--bg) 28%);
+      color:var(--text);
+    }
+    .wrap{max-width:1050px;margin:0 auto;padding:28px 16px 60px}
+    header{text-align:center;margin-bottom:24px}
+    h1{margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
+    .lead{color:var(--muted);line-height:1.6}
+    .card{
+      background:var(--card);border:1px solid var(--border);border-radius:18px;
+      padding:20px;box-shadow:0 8px 24px rgba(15,23,42,.06);margin:16px 0
+    }
+    label{display:block;font-weight:700;margin:8px 0}
+    input{
+      width:100%;padding:12px;border:1px solid #cbd5e1;
+      border-radius:12px;font-size:1rem
+    }
+    button{
+      border:none;border-radius:12px;padding:12px 16px;font-size:1rem;
+      font-weight:700;cursor:pointer
+    }
+    .primary{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff}
+    .secondary{background:#e2e8f0;color:#0f172a}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    #status{margin-top:12px;font-weight:700}
+    .error{color:var(--danger)}
+    .ok{color:var(--success)}
+    .submission{margin-top:18px}
+    .topline{
+      display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap
+    }
+    .group-title{font-size:1.35rem;font-weight:800}
+    .meta{color:var(--muted);font-size:.95rem;line-height:1.5;margin-top:6px}
+    .prompt{
+      margin-top:16px;background:#0f172a;color:#f8fafc;border-radius:16px;
+      padding:18px;white-space:pre-wrap;line-height:1.6;font-family:Consolas,monospace;
+      overflow-wrap:anywhere
+    }
+    .empty{
+      text-align:center;color:var(--muted);padding:28px
+    }
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>👩‍🏫 Lärarvy</h1>
+      <p class="lead">Här visas gruppernas inskickade arbete i samma format som deras färdiga app-prompt.</p>
+    </header>
+
+    <section id="loginBox" class="card">
+      <h2>Logga in som lärare</h2>
+      <label for="teacherCode">Lärarkod</label>
+      <input id="teacherCode" type="password" autocomplete="current-password" placeholder="Skriv lärarkoden" />
+      <div class="actions">
+        <button class="primary" onclick="loadSubmissions()">Öppna lärarvyn</button>
+      </div>
+      <div id="status"></div>
+    </section>
+
+    <section id="teacherView" class="hidden">
+      <div class="card">
+        <div class="topline">
+          <div>
+            <h2 style="margin:0">Inskickade grupper</h2>
+            <div id="count" class="meta"></div>
+          </div>
+          <div class="actions" style="margin:0">
+            <button class="secondary" onclick="loadSubmissions()">↻ Uppdatera</button>
+          </div>
+        </div>
+      </div>
+      <div id="submissions"></div>
+    </section>
+  </div>
+
+<script>
+const SUPABASE_URL = "https://mtybxohrlwprlgmudnsg.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_hotW6b95wxfjSf-waPmgHw_y8AiYzT1";
+
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+async function loadSubmissions(){
+  const code = document.getElementById("teacherCode").value.trim();
+  const status = document.getElementById("status");
+  status.className = "";
+  status.textContent = "Hämtar...";
+
+  if(!code){
+    status.className = "error";
+    status.textContent = "Skriv lärarkoden.";
+    return;
+  }
+
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_app_ide_submissions`, {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "apikey":SUPABASE_PUBLISHABLE_KEY
+      },
+      body:JSON.stringify({p_code:code})
+    });
+
+    if(!res.ok){
+      const body = await res.text();
+      throw new Error(body || "Kunde inte hämta svar.");
+    }
+
+    const rows = await res.json();
+    status.className = "ok";
+    status.textContent = "Inloggad.";
+    document.getElementById("teacherView").classList.remove("hidden");
+    renderRows(rows);
+  }catch(err){
+    console.error(err);
+    status.className = "error";
+    status.textContent = "Fel lärarkod eller lärarvyn är inte aktiverad ännu.";
+    document.getElementById("teacherView").classList.add("hidden");
+  }
+}
+
+function renderRows(rows){
+  const root = document.getElementById("submissions");
+  document.getElementById("count").textContent =
+    rows.length === 1 ? "1 grupp" : rows.length + " grupper";
+
+  if(!rows.length){
+    root.innerHTML = '<div class="card empty">Inga grupper har skickat in ännu.</div>';
+    return;
+  }
+
+  root.innerHTML = rows.map((r,i) => {
+    const members = [r.member_1,r.member_2,r.member_3].filter(Boolean).join(", ");
+    const when = r.created_at ? new Date(r.created_at).toLocaleString("sv-SE") : "";
+    return `
+      <article class="card submission">
+        <div class="topline">
+          <div>
+            <div class="group-title">${esc(r.group_name || ("Grupp " + (i+1)))}</div>
+            <div class="meta">
+              <strong>Deltagare:</strong> ${esc(members || "Ej angivet")}<br>
+              <strong>App:</strong> ${esc(r.app_name || "Inte bestämt ännu")}
+              ${when ? "<br><strong>Inskickat:</strong> " + esc(when) : ""}
+            </div>
+          </div>
+          <button class="secondary" onclick="copyPrompt(${i})">📋 Kopiera prompt</button>
+        </div>
+        <div class="prompt" id="prompt-${i}">${esc(r.prompt_text || "")}</div>
+      </article>`;
+  }).join("");
+
+  window.__rows = rows;
+}
+
+async function copyPrompt(i){
+  const text = (window.__rows?.[i]?.prompt_text) || "";
+  try{
+    await navigator.clipboard.writeText(text);
+    alert("Prompten är kopierad!");
+  }catch{
+    alert("Kunde inte kopiera automatiskt.");
+  }
+}
+
+document.getElementById("teacherCode").addEventListener("keydown", e => {
+  if(e.key === "Enter") loadSubmissions();
+});
+</script>
+</body>
+</html>
