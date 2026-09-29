@@ -65,11 +65,18 @@
 
     <section id="loginBox" class="card">
       <h2>Logga in som lärare</h2>
-      <label for="teacherCode">Lärarkod</label>
-      <input id="teacherCode" type="password" autocomplete="current-password" placeholder="Skriv lärarkoden" />
-      <div class="actions">
-        <button class="primary" onclick="loadSubmissions()">Öppna lärarvyn</button>
-      </div>
+      <form id="teacherLoginForm" autocomplete="on">
+        <input type="text" name="username" value="larare" autocomplete="username"
+               aria-hidden="true" tabindex="-1"
+               style="position:absolute;left:-10000px;width:1px;height:1px;opacity:0" />
+        <label for="teacherCode">Lärarkod</label>
+        <input id="teacherCode" name="password" type="password"
+               autocomplete="current-password" placeholder="Skriv lärarkoden" />
+        <div class="actions">
+          <button class="primary" type="submit">Öppna lärarvyn</button>
+        </div>
+      </form>
+      <p class="meta">Chrome/Edge kan erbjuda att spara lärarkoden efter en lyckad inloggning.</p>
       <div id="status"></div>
     </section>
 
@@ -219,8 +226,9 @@ async function deleteSubmission(id, groupName){
   }
 }
 
-document.getElementById("teacherCode").addEventListener("keydown", e => {
-  if(e.key === "Enter") loadSubmissions();
+document.getElementById("teacherLoginForm").addEventListener("submit", e => {
+  e.preventDefault();
+  loadSubmissions();
 });
 </script>
 </body>
