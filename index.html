@@ -146,6 +146,9 @@
     <div class="actions">
       <button class="primary" onclick="buildPrompt()">✨ Skapa vår app-prompt</button>
       <button class="save" onclick="saveSubmission()">💾 Spara gruppens arbete</button>
+      <a href="app-ide-verktyg.html" download="app-ide-verktyg.html" style="text-decoration:none">
+        <button class="secondary" type="button">⬇️ Ladda ner verktyget (.html)</button>
+      </a>
       <button class="secondary" onclick="clearForm()">Rensa</button>
     </div>
 
@@ -156,7 +159,6 @@
       <div id="promptOutput"></div>
       <div class="actions">
         <button class="primary" onclick="copyPrompt()">📋 Kopiera prompt</button>
-        <button class="secondary" onclick="downloadTemplate()">⬇️ Ladda ner mallen</button>
       </div>
     </section>
 
@@ -236,92 +238,6 @@ Beskriv sedan vilka sidor appen behöver och vad man kan göra på varje sida.`;
     }catch{
       alert("Markera texten och kopiera den manuellt.");
     }
-  }
-
-  function downloadTemplate(){
-    const template = `APP-IDÉ – MIN EGEN MALL
-
-Grupp/namn:
-____________________________
-
-Deltagare:
-1. ________________________
-2. ________________________
-3. ________________________
-
-Appens namn:
-____________________________
-
-Min app-idé:
-Vad ska appen göra?
-____________________________
-____________________________
-
-Målgrupp:
-Vem ska använda appen?
-____________________________
-____________________________
-
-Problemet:
-Vilket problem ska appen lösa?
-____________________________
-____________________________
-
-Funktioner:
-Skriv 3–5 saker man ska kunna göra i appen.
-1. ________________________
-2. ________________________
-3. ________________________
-4. ________________________
-5. ________________________
-
-Design:
-Stil: ______________________
-Färger/tema: _______________
-
-FÄRDIG PROMPT-MALL
-
-Vi vill bygga en enkel app.
-
-Appens namn:
-[skriv appens namn]
-
-Vår idé:
-[beskriv idén]
-
-Målgrupp:
-[skriv vem appen är till för]
-
-Problemet appen ska lösa:
-[beskriv problemet]
-
-Funktioner appen ska ha:
-[skriv funktionerna]
-
-Design:
-Stil: [skriv stil]
-Färger/tema: [skriv färger]
-
-Skapa appen så att den är:
-- enkel att förstå
-- lätt att använda
-- tydlig för barn
-- byggd med stora knappar och enkel text
-- uppdelad i tydliga sidor eller delar
-
-Börja med att förklara hur appen skulle fungera.
-Beskriv sedan vilka sidor appen behöver och vad man kan göra på varje sida.
-`;
-
-    const blob = new Blob([template], {type:"text/plain;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "app-ide-mall.txt";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
   }
 
   function getSubmission(){
