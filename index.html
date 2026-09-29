@@ -156,6 +156,7 @@
       <div id="promptOutput"></div>
       <div class="actions">
         <button class="primary" onclick="copyPrompt()">📋 Kopiera prompt</button>
+        <button class="secondary" onclick="downloadPrompt()">⬇️ Ladda ner prompt</button>
       </div>
     </section>
 
@@ -235,6 +236,24 @@ Beskriv sedan vilka sidor appen behöver och vad man kan göra på varje sida.`;
     }catch{
       alert("Markera texten och kopiera den manuellt.");
     }
+  }
+
+  function downloadPrompt(){
+    const text = buildPromptText();
+    const appName = raw("name") || raw("groupName") || "min-app-prompt";
+    const safeName = appName
+      .replace(/[^a-zA-Z0-9åäöÅÄÖ_-]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "min-app-prompt";
+
+    const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = safeName + "-prompt.txt";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   }
 
   function getSubmission(){
