@@ -6,63 +6,91 @@
   <title>Lärarvy – Bygg din app-idé</title>
   <style>
     :root{
-      --bg:#f7f8fc; --card:#fff; --text:#1f2937; --muted:#64748b;
-      --primary:#4f46e5; --primary2:#7c3aed; --border:#e2e8f0;
-      --success:#047857; --danger:#b91c1c;
+      --bg:#f7f8fc;--card:#fff;--text:#1f2937;--muted:#64748b;
+      --primary:#4f46e5;--primary2:#7c3aed;--border:#e2e8f0;
+      --success:#047857;--danger:#b91c1c;--soft:#eef2ff
     }
     *{box-sizing:border-box}
     body{
-      margin:0; font-family:Arial,Helvetica,sans-serif;
+      margin:0;font-family:Arial,Helvetica,sans-serif;
       background:linear-gradient(180deg,#eef2ff 0%,var(--bg) 28%);
-      color:var(--text);
+      color:var(--text)
     }
-    .wrap{max-width:1050px;margin:0 auto;padding:28px 16px 60px}
+    .wrap{max-width:1120px;margin:0 auto;padding:28px 16px 60px}
     header{text-align:center;margin-bottom:24px}
     h1{margin:0 0 10px;font-size:clamp(2rem,5vw,3.2rem)}
+    h2,h3{margin-top:0}
     .lead{color:var(--muted);line-height:1.6}
     .card{
       background:var(--card);border:1px solid var(--border);border-radius:18px;
       padding:20px;box-shadow:0 8px 24px rgba(15,23,42,.06);margin:16px 0
     }
     label{display:block;font-weight:700;margin:8px 0}
-    input{
-      width:100%;padding:12px;border:1px solid #cbd5e1;
-      border-radius:12px;font-size:1rem
+    input,select{
+      width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:12px;
+      font-size:1rem;background:#fff;color:var(--text)
     }
     button{
-      border:none;border-radius:12px;padding:12px 16px;font-size:1rem;
+      border:none;border-radius:12px;padding:11px 15px;font-size:.98rem;
       font-weight:700;cursor:pointer
     }
+    button:disabled{opacity:.55;cursor:not-allowed}
     .primary{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff}
     .secondary{background:#e2e8f0;color:#0f172a}
+    .danger{background:#fee2e2;color:#991b1b}
     .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .topline{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+    .grid2{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+    .class-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,1fr);gap:16px}
+    .class-list{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .class-chip{
+      display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--soft);
+      border:1px solid #c7d2fe;border-radius:999px
+    }
+    .class-chip strong{font-size:.95rem}
+    .mini{padding:6px 9px;border-radius:999px;font-size:.82rem}
     #status{margin-top:12px;font-weight:700}
     .error{color:var(--danger)}
     .ok{color:var(--success)}
-    .submission{margin-top:18px}
-    .topline{
-      display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap
-    }
-    .section-title{margin:28px 0 8px;font-size:1.6rem;font-weight:800}
-    .section-count{color:var(--muted);font-size:.95rem;margin-bottom:8px}
-    .group-title{font-size:1.35rem;font-weight:800}
     .meta{color:var(--muted);font-size:.95rem;line-height:1.5;margin-top:6px}
+    .hidden{display:none}
+    .class-section{margin-top:30px}
+    .class-heading{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      border-bottom:2px solid #c7d2fe;padding-bottom:8px;margin-bottom:12px
+    }
+    .class-heading h2{margin:0;font-size:1.55rem}
+    .section-title{margin:20px 0 6px;font-size:1.15rem;font-weight:800}
+    .section-count{color:var(--muted);font-size:.9rem;margin-bottom:6px}
+    .submission{margin-top:12px}
+    .group-title{font-size:1.25rem;font-weight:800}
+    .badge{
+      display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;
+      font-size:.82rem;font-weight:800;background:#f1f5f9;color:#334155;margin-top:8px
+    }
+    .controls{
+      display:grid;grid-template-columns:minmax(180px,1fr) minmax(180px,1fr);
+      gap:10px;margin-top:14px
+    }
+    .controls label{font-size:.87rem;color:var(--muted);margin:0 0 5px}
     .prompt{
       margin-top:16px;background:#0f172a;color:#f8fafc;border-radius:16px;
       padding:18px;white-space:pre-wrap;line-height:1.6;font-family:Consolas,monospace;
       overflow-wrap:anywhere
     }
-    .empty{
-      text-align:center;color:var(--muted);padding:28px
+    .empty{text-align:center;color:var(--muted);padding:28px}
+    @media(max-width:760px){
+      .grid2,.class-toolbar,.controls{grid-template-columns:1fr}
+      .actions button{width:100%}
+      .class-chip{width:100%;border-radius:14px;justify-content:space-between}
     }
-    .hidden{display:none}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <h1>👩‍🏫 Lärarvy</h1>
-      <p class="lead">Här visas gruppernas inskickade arbete i samma format som deras färdiga app-prompt.</p>
+      <p class="lead">Sortera, flytta och organisera elevernas app-idéer i klasser som du själv bestämmer.</p>
     </header>
 
     <section id="loginBox" class="card">
@@ -79,7 +107,6 @@
           <button class="primary" type="submit">Öppna lärarvyn</button>
         </div>
       </form>
-      <p class="meta">Chrome/Edge kan erbjuda att spara lärarkoden efter en lyckad inloggning.</p>
       <div id="status"></div>
     </section>
 
@@ -92,10 +119,32 @@
           </div>
           <div class="actions" style="margin:0">
             <button class="primary" onclick="downloadAllPromptsZip()">📦 Ladda ner alla promptar (.zip)</button>
-            <button class="secondary" onclick="loadSubmissions()">↻ Uppdatera</button>
+            <button class="secondary" onclick="loadTeacherView(false)">↻ Uppdatera</button>
           </div>
         </div>
       </div>
+
+      <div class="card">
+        <h2>Klasser</h2>
+        <p class="meta">Skapa valfria klasser. Därefter kan du flytta varje arbete till rätt klass och ändra det när du vill.</p>
+        <div class="class-toolbar">
+          <div>
+            <label for="newClassName">Ny klass</label>
+            <div class="grid2">
+              <input id="newClassName" maxlength="80" placeholder="Exempel: 4A, 4B eller Grupp Röd" />
+              <button class="primary" type="button" onclick="createClass()">+ Skapa klass</button>
+            </div>
+          </div>
+          <div>
+            <label for="classFilter">Visa arbeten</label>
+            <select id="classFilter" onchange="renderRows(window.__rows || [])">
+              <option value="all">Alla klasser</option>
+            </select>
+          </div>
+        </div>
+        <div id="classList" class="class-list"></div>
+      </div>
+
       <div id="submissions"></div>
     </section>
   </div>
@@ -105,173 +154,351 @@
 const SUPABASE_URL = "https://mtybxohrlwprlgmudnsg.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_hotW6b95wxfjSf-waPmgHw_y8AiYzT1";
 
+window.__rows = [];
+window.__classes = [];
+
 function esc(s){
-  return String(s ?? "").replace(/[&<>"']/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[c]));
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
 }
 
-async function loadSubmissions(){
-  const code = document.getElementById("teacherCode").value.trim();
+function teacherCode(){
+  return document.getElementById("teacherCode").value.trim();
+}
+
+function setStatus(message, type){
   const status = document.getElementById("status");
-  status.className = "";
-  status.textContent = "Hämtar...";
+  status.className = type || "";
+  status.textContent = message || "";
+}
+
+async function rpc(name, payload){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "apikey":SUPABASE_PUBLISHABLE_KEY
+    },
+    body:JSON.stringify(payload || {})
+  });
+
+  if(!res.ok){
+    const body = await res.text();
+    throw new Error(body || "Anropet misslyckades.");
+  }
+
+  if(res.status === 204) return null;
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function loadTeacherView(showLoading){
+  const code = teacherCode();
 
   if(!code){
-    status.className = "error";
-    status.textContent = "Skriv lärarkoden.";
+    setStatus("Skriv lärarkoden.", "error");
+    return;
+  }
+
+  if(showLoading !== false) setStatus("Hämtar...", "");
+
+  try{
+    const results = await Promise.all([
+      rpc("get_teacher_classes", {p_code:code}),
+      rpc("get_app_ide_submissions", {p_code:code})
+    ]);
+
+    window.__classes = Array.isArray(results[0]) ? results[0] : [];
+    window.__rows = Array.isArray(results[1]) ? results[1] : [];
+
+    document.getElementById("teacherView").classList.remove("hidden");
+    renderClassManager();
+    renderRows(window.__rows);
+    setStatus("Inloggad.", "ok");
+  }catch(err){
+    console.error(err);
+    document.getElementById("teacherView").classList.add("hidden");
+    setStatus("Fel lärarkod eller klassfunktionen är inte aktiverad i Supabase ännu.", "error");
+  }
+}
+
+function renderClassManager(){
+  const classes = window.__classes || [];
+  const list = document.getElementById("classList");
+  const filter = document.getElementById("classFilter");
+  const previous = filter.value || "all";
+
+  if(!classes.length){
+    list.innerHTML = '<span class="meta">Inga klasser skapade ännu.</span>';
+  }else{
+    list.innerHTML = classes.map(function(c){
+      return '<div class="class-chip">' +
+        '<strong>' + esc(c.name) + '</strong>' +
+        '<span>' +
+          '<button class="mini secondary" type="button" onclick="renameClass(\'' + c.id + '\')">✏️ Ändra</button> ' +
+          '<button class="mini danger" type="button" onclick="deleteClass(\'' + c.id + '\')">🗑️</button>' +
+        '</span>' +
+      '</div>';
+    }).join("");
+  }
+
+  filter.innerHTML =
+    '<option value="all">Alla klasser</option>' +
+    '<option value="unassigned">Ingen klass</option>' +
+    classes.map(function(c){
+      return '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>';
+    }).join("");
+
+  const exists = Array.from(filter.options).some(function(o){ return o.value === previous; });
+  filter.value = exists ? previous : "all";
+}
+
+async function createClass(){
+  const input = document.getElementById("newClassName");
+  const name = input.value.trim();
+
+  if(!name){
+    setStatus("Skriv ett klassnamn först.", "error");
     return;
   }
 
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_app_ide_submissions`, {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "apikey":SUPABASE_PUBLISHABLE_KEY
-      },
-      body:JSON.stringify({p_code:code})
-    });
-
-    if(!res.ok){
-      const body = await res.text();
-      throw new Error(body || "Kunde inte hämta svar.");
-    }
-
-    const rows = await res.json();
-
-    status.className = "ok";
-    status.textContent = "Inloggad.";
-    document.getElementById("teacherView").classList.remove("hidden");
-    renderRows(rows);
+    setStatus("Skapar klass...", "");
+    await rpc("create_teacher_class", {p_code:teacherCode(), p_name:name});
+    input.value = "";
+    await loadTeacherView(false);
+    setStatus("Klassen skapades.", "ok");
   }catch(err){
     console.error(err);
-    status.className = "error";
-    status.textContent = "Fel lärarkod eller lärarvyn är inte aktiverad ännu.";
-    document.getElementById("teacherView").classList.add("hidden");
+    setStatus("Kunde inte skapa klassen. Kontrollera att namnet inte redan finns.", "error");
   }
 }
 
-const CATEGORY_OVERRIDE_KEY = "submissionCategoryOverrides";
+async function renameClass(id){
+  const c = (window.__classes || []).find(function(x){ return x.id === id; });
+  if(!c) return;
 
-function getCategoryOverrides(){
+  const name = prompt("Nytt namn på klassen:", c.name);
+  if(name == null) return;
+
+  const clean = name.trim();
+  if(!clean){
+    setStatus("Klassnamnet får inte vara tomt.", "error");
+    return;
+  }
+
   try{
-    return JSON.parse(localStorage.getItem(CATEGORY_OVERRIDE_KEY) || "{}");
-  }catch{
-    return {};
+    setStatus("Ändrar klassnamn...", "");
+    await rpc("rename_teacher_class", {p_code:teacherCode(), p_id:id, p_name:clean});
+    await loadTeacherView(false);
+    setStatus("Klassnamnet ändrades.", "ok");
+  }catch(err){
+    console.error(err);
+    setStatus("Kunde inte ändra klassnamnet.", "error");
   }
 }
 
-function setCategoryOverride(id, category){
-  const overrides = getCategoryOverrides();
-  overrides[id] = category;
-  localStorage.setItem(CATEGORY_OVERRIDE_KEY, JSON.stringify(overrides));
+async function deleteClass(id){
+  const c = (window.__classes || []).find(function(x){ return x.id === id; });
+  if(!c) return;
+
+  if(!confirm("Radera klassen " + c.name + "?\n\nArbetena raderas inte. De flyttas till Ingen klass.")) return;
+
+  try{
+    setStatus("Raderar klass...", "");
+    await rpc("delete_teacher_class", {p_code:teacherCode(), p_id:id});
+    await loadTeacherView(false);
+    setStatus("Klassen raderades. Arbetena ligger nu under Ingen klass.", "ok");
+  }catch(err){
+    console.error(err);
+    setStatus("Kunde inte radera klassen.", "error");
+  }
 }
 
-function moveSubmission(id, category){
-  setCategoryOverride(id, category);
-  const rows = window.__rows || [];
-  renderRows(rows);
+function uniqueMembers(r){
+  const seen = new Set();
+  return [r.member_1, r.member_2, r.member_3]
+    .map(function(v){ return String(v || "").trim(); })
+    .filter(Boolean)
+    .filter(function(name){
+      const key = name.toLocaleLowerCase("sv-SE");
+      if(seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
 
-  const status = document.getElementById("status");
-  status.className = "ok";
-  status.textContent = category === "group"
-    ? "Arbetet flyttades till Grupparbeten."
-    : "Arbetet flyttades till Individuella arbeten.";
+function categoryFor(r){
+  if(r.teacher_category === "individual" || r.teacher_category === "group"){
+    return r.teacher_category;
+  }
+  return uniqueMembers(r).length >= 2 ? "group" : "individual";
+}
+
+async function changeSubmissionClass(id, value){
+  try{
+    setStatus("Flyttar arbete...", "");
+    await rpc("set_submission_class", {
+      p_code:teacherCode(),
+      p_submission_id:id,
+      p_class_id:value || null
+    });
+    await loadTeacherView(false);
+    setStatus("Arbetet flyttades till vald klass.", "ok");
+  }catch(err){
+    console.error(err);
+    setStatus("Kunde inte flytta arbetet.", "error");
+  }
+}
+
+async function changeSubmissionCategory(id, value){
+  try{
+    setStatus("Ändrar typ...", "");
+    await rpc("set_submission_category", {
+      p_code:teacherCode(),
+      p_submission_id:id,
+      p_category:value
+    });
+    await loadTeacherView(false);
+    setStatus("Arbetets typ ändrades.", "ok");
+  }catch(err){
+    console.error(err);
+    setStatus("Kunde inte ändra arbetets typ.", "error");
+  }
+}
+
+function classOptions(selectedId){
+  const classes = window.__classes || [];
+  let out = '<option value="">Ingen klass</option>';
+
+  classes.forEach(function(c){
+    out += '<option value="' + esc(c.id) + '"' +
+      (selectedId === c.id ? ' selected' : '') +
+      '>' + esc(c.name) + '</option>';
+  });
+
+  return out;
+}
+
+function renderCard(r, index){
+  const members = uniqueMembers(r).join(", ");
+  const when = r.created_at ? new Date(r.created_at).toLocaleString("sv-SE") : "";
+  const category = categoryFor(r);
+  const fallbackName = category === "group" ? ("Grupp " + (index + 1)) : (r.member_1 || ("Elev " + (index + 1)));
+  const typeLabel = category === "group" ? "👥 Grupparbete" : "👤 Individuellt";
+
+  return '<article class="card submission">' +
+    '<div class="topline">' +
+      '<div>' +
+        '<div class="group-title">' + esc(r.group_name || fallbackName) + '</div>' +
+        '<div class="badge">' + typeLabel + '</div>' +
+        '<div class="meta">' +
+          '<strong>Deltagare:</strong> ' + esc(members || "Ej angivet") + '<br>' +
+          '<strong>App:</strong> ' + esc(r.app_name || "Inte bestämt ännu") +
+          (when ? '<br><strong>Inskickat:</strong> ' + esc(when) : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="actions" style="margin:0">' +
+        '<button class="secondary" type="button" onclick="copyPrompt(' + index + ')">📋 Kopiera prompt</button>' +
+        '<button class="danger" type="button" onclick="deleteSubmission(\'' + r.id + '\', \'' + esc(r.group_name || fallbackName).replace(/'/g,"&#39;") + '\')">🗑️ Radera</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="controls">' +
+      '<div>' +
+        '<label>Klass</label>' +
+        '<select onchange="changeSubmissionClass(\'' + r.id + '\', this.value)">' +
+          classOptions(r.class_id || "") +
+        '</select>' +
+      '</div>' +
+      '<div>' +
+        '<label>Arbetstyp</label>' +
+        '<select onchange="changeSubmissionCategory(\'' + r.id + '\', this.value)">' +
+          '<option value="individual"' + (category === "individual" ? ' selected' : '') + '>Individuellt</option>' +
+          '<option value="group"' + (category === "group" ? ' selected' : '') + '>Grupparbete</option>' +
+        '</select>' +
+      '</div>' +
+    '</div>' +
+    '<div class="prompt">' + esc(r.prompt_text || "") + '</div>' +
+  '</article>';
+}
+
+function renderCategory(title, items, allRows){
+  return '<div class="section-title">' + title + '</div>' +
+    '<div class="section-count">' + (items.length === 1 ? "1 arbete" : items.length + " arbeten") + '</div>' +
+    (items.length
+      ? items.map(function(r){ return renderCard(r, allRows.indexOf(r)); }).join("")
+      : '<div class="card empty">Inga arbeten i den här delen.</div>');
+}
+
+function renderClassSection(title, rows, allRows){
+  const individual = rows.filter(function(r){ return categoryFor(r) === "individual"; });
+  const groups = rows.filter(function(r){ return categoryFor(r) === "group"; });
+
+  return '<section class="class-section">' +
+    '<div class="class-heading"><h2>🏫 ' + esc(title) + '</h2><span class="meta">' +
+      (rows.length === 1 ? "1 arbete" : rows.length + " arbeten") +
+    '</span></div>' +
+    renderCategory("👤 Individuella arbeten", individual, allRows) +
+    renderCategory("👥 Grupparbeten", groups, allRows) +
+  '</section>';
 }
 
 function renderRows(rows){
   const root = document.getElementById("submissions");
-  const overrides = getCategoryOverrides();
+  const filter = document.getElementById("classFilter");
+  const filterValue = filter ? filter.value : "all";
+  const classes = window.__classes || [];
 
-  function uniqueMembers(r){
-    const seen = new Set();
-    return [r.member_1, r.member_2, r.member_3]
-      .map(v => String(v || "").trim())
-      .filter(Boolean)
-      .filter(name => {
-        const key = name.toLocaleLowerCase("sv-SE");
-        if(seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
+  let visible = rows.slice();
+
+  if(filterValue === "unassigned"){
+    visible = visible.filter(function(r){ return !r.class_id; });
+  }else if(filterValue !== "all"){
+    visible = visible.filter(function(r){ return r.class_id === filterValue; });
   }
 
-  const indexedRows = rows.map((r, i) => {
-    const memberCount = uniqueMembers(r).length;
-    const automaticCategory = memberCount >= 2 ? "group" : "individual";
-    const category = overrides[r.id] || automaticCategory;
-
-    return {
-      row: r,
-      originalIndex: i,
-      memberCount,
-      category,
-      automaticCategory
-    };
-  });
-
-  const individual = indexedRows.filter(x => x.category === "individual");
-  const groups = indexedRows.filter(x => x.category === "group");
+  const individualTotal = visible.filter(function(r){ return categoryFor(r) === "individual"; }).length;
+  const groupTotal = visible.filter(function(r){ return categoryFor(r) === "group"; }).length;
 
   document.getElementById("count").textContent =
-    individual.length + " individuella • " + groups.length + " grupparbeten";
-
-  window.__rows = rows;
+    visible.length + " visade • " + individualTotal + " individuella • " + groupTotal + " grupparbeten";
 
   if(!rows.length){
     root.innerHTML = '<div class="card empty">Inga arbeten har skickats in ännu.</div>';
     return;
   }
 
-  function renderCard(item){
-    const r = item.row;
-    const i = item.originalIndex;
-    const members = uniqueMembers(r).join(", ");
-    const when = r.created_at ? new Date(r.created_at).toLocaleString("sv-SE") : "";
-    const fallbackName = item.category === "group"
-      ? ("Grupp " + (i+1))
-      : (r.member_1 || ("Elev " + (i+1)));
-    const moveTarget = item.category === "group" ? "individual" : "group";
-    const moveLabel = item.category === "group"
-      ? "👤 Flytta till individuell"
-      : "👥 Flytta till grupp";
-
-    return `
-      <article class="card submission">
-        <div class="topline">
-          <div>
-            <div class="group-title">${esc(r.group_name || fallbackName)}</div>
-            <div class="meta">
-              <strong>Deltagare:</strong> ${esc(members || "Ej angivet")}<br>
-              <strong>App:</strong> ${esc(r.app_name || "Inte bestämt ännu")}
-              ${when ? "<br><strong>Inskickat:</strong> " + esc(when) : ""}
-            </div>
-          </div>
-          <div class="actions" style="margin:0">
-            <button class="secondary" onclick="moveSubmission('${r.id}', '${moveTarget}')">${moveLabel}</button>
-            <button class="secondary" onclick="copyPrompt(${i})">📋 Kopiera prompt</button>
-            <button class="secondary" onclick="deleteSubmission('${r.id}', '${esc(r.group_name || fallbackName).replace(/'/g,"&#39;")}')">🗑️ Radera</button>
-          </div>
-        </div>
-        <div class="prompt" id="prompt-${i}">${esc(r.prompt_text || "")}</div>
-      </article>`;
+  if(!visible.length){
+    root.innerHTML = '<div class="card empty">Inga arbeten finns i den valda klassen.</div>';
+    return;
   }
 
-  function renderSection(title, items, emptyText){
-    return `
-      <section>
-        <div class="section-title">${title}</div>
-        <div class="section-count">${items.length === 1 ? "1 arbete" : items.length + " arbeten"}</div>
-        ${items.length
-          ? items.map(renderCard).join("")
-          : '<div class="card empty">' + emptyText + '</div>'}
-      </section>`;
+  if(filterValue === "unassigned"){
+    root.innerHTML = renderClassSection("Ingen klass", visible, rows);
+    return;
   }
 
-  root.innerHTML =
-    renderSection("👤 Individuella arbeten", individual, "Inga individuella arbeten ännu.") +
-    renderSection("👥 Grupparbeten", groups, "Inga grupparbeten ännu.");
+  if(filterValue !== "all"){
+    const selectedClass = classes.find(function(c){ return c.id === filterValue; });
+    root.innerHTML = renderClassSection(selectedClass ? selectedClass.name : "Vald klass", visible, rows);
+    return;
+  }
+
+  let html = "";
+  const unassigned = rows.filter(function(r){ return !r.class_id; });
+  if(unassigned.length){
+    html += renderClassSection("Ingen klass", unassigned, rows);
+  }
+
+  classes.forEach(function(c){
+    const classRows = rows.filter(function(r){ return r.class_id === c.id; });
+    if(classRows.length){
+      html += renderClassSection(c.name, classRows, rows);
+    }
+  });
+
+  root.innerHTML = html || '<div class="card empty">Inga arbeten att visa.</div>';
 }
 
 async function downloadAllPromptsZip(){
@@ -287,9 +514,7 @@ async function downloadAllPromptsZip(){
     return;
   }
 
-  const status = document.getElementById("status");
-  status.className = "";
-  status.textContent = "Skapar ZIP-fil...";
+  setStatus("Skapar ZIP-fil...", "");
 
   try{
     const zip = new JSZip();
@@ -302,13 +527,17 @@ async function downloadAllPromptsZip(){
         .slice(0, 80) || "utan-namn";
     }
 
-    rows.forEach((r, i) => {
-      const members = [r.member_1, r.member_2, r.member_3].filter(Boolean).join(", ");
+    rows.forEach(function(r, i){
+      const members = uniqueMembers(r).join(", ");
       const title = safeName(r.app_name || r.group_name || ("arbete-" + (i + 1)));
       const group = safeName(r.group_name || ("grupp-" + (i + 1)));
+      const className = r.class_name || "Ingen klass";
+      const categoryName = categoryFor(r) === "group" ? "Grupparbete" : "Individuellt";
 
       const text = [
         "APP-IDÉ / PROMPT",
+        "Klass: " + className,
+        "Typ: " + categoryName,
         "Grupp/Namn: " + (r.group_name || "Ej angivet"),
         "Deltagare: " + (members || "Ej angivet"),
         "Appnamn: " + (r.app_name || "Inte bestämt ännu"),
@@ -336,7 +565,7 @@ async function downloadAllPromptsZip(){
       ].join("\n");
 
       zip.file(
-        String(i + 1).padStart(2, "0") + " - " + group + " - " + title + ".txt",
+        String(i + 1).padStart(2, "0") + " - " + safeName(className) + " - " + group + " - " + title + ".txt",
         "\uFEFF" + text
       );
     });
@@ -346,11 +575,11 @@ async function downloadAllPromptsZip(){
       "Exporterad: " + new Date().toLocaleString("sv-SE"),
       "Antal arbeten: " + rows.length,
       "",
-      ...rows.map((r, i) =>
-        (i + 1) + ". " +
-        (r.group_name || "Ej angivet") + " – " +
-        (r.app_name || "Inte bestämt ännu")
-      )
+      ...rows.map(function(r, i){
+        return (i + 1) + ". [" + (r.class_name || "Ingen klass") + "] " +
+          (r.group_name || "Ej angivet") + " – " +
+          (r.app_name || "Inte bestämt ännu");
+      })
     ].join("\n");
 
     zip.file("00 - Oversikt.txt", "\uFEFF" + summary);
@@ -367,72 +596,48 @@ async function downloadAllPromptsZip(){
     a.remove();
     URL.revokeObjectURL(url);
 
-    status.className = "ok";
-    status.textContent = "ZIP-filen med alla promptar är skapad.";
+    setStatus("ZIP-filen med alla promptar är skapad.", "ok");
   }catch(err){
     console.error(err);
-    status.className = "error";
-    status.textContent = "Kunde inte skapa ZIP-filen.";
+    setStatus("Kunde inte skapa ZIP-filen.", "error");
   }
 }
 
 async function copyPrompt(i){
-  const text = (window.__rows?.[i]?.prompt_text) || "";
+  const text = (window.__rows[i] && window.__rows[i].prompt_text) || "";
+
   try{
     await navigator.clipboard.writeText(text);
-    alert("Prompten är kopierad!");
+    setStatus("Prompten är kopierad.", "ok");
   }catch{
     alert("Kunde inte kopiera automatiskt.");
   }
 }
 
 async function deleteSubmission(id, groupName){
-  const code = document.getElementById("teacherCode").value.trim();
-  if(!confirm("Radera hela inlämningen för " + groupName + "?\n\nDetta går inte att ångra.")){
-    return;
-  }
-
-  const status = document.getElementById("status");
-  status.className = "";
-  status.textContent = "Raderar...";
+  if(!confirm("Radera hela inlämningen för " + groupName + "?\n\nDetta går inte att ångra.")) return;
 
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/delete_app_ide_submission`, {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "apikey":SUPABASE_PUBLISHABLE_KEY
-      },
-      body:JSON.stringify({p_code:code, p_id:id})
-    });
-
-    if(!res.ok){
-      throw new Error(await res.text());
-    }
-
-    status.className = "ok";
-    status.textContent = "Inlämningen är raderad.";
-    await loadSubmissions();
+    setStatus("Raderar...", "");
+    await rpc("delete_app_ide_submission", {p_code:teacherCode(), p_id:id});
+    await loadTeacherView(false);
+    setStatus("Inlämningen är raderad.", "ok");
   }catch(err){
     console.error(err);
-    status.className = "error";
-    status.textContent = "Kunde inte radera inlämningen.";
+    setStatus("Kunde inte radera inlämningen.", "error");
   }
 }
 
 function saveTeacherCode(){
-  const code = document.getElementById("teacherCode").value.trim();
-  const status = document.getElementById("status");
+  const code = teacherCode();
 
   if(!code){
-    status.className = "error";
-    status.textContent = "Skriv lärarkoden först.";
+    setStatus("Skriv lärarkoden först.", "error");
     return;
   }
 
   localStorage.setItem("savedTeacherCode", code);
-  status.className = "ok";
-  status.textContent = "✅ Lärarkoden är sparad på den här enheten.";
+  setStatus("Lärarkoden är sparad på den här enheten.", "ok");
 }
 
 const savedTeacherCode = localStorage.getItem("savedTeacherCode");
@@ -440,9 +645,16 @@ if(savedTeacherCode){
   document.getElementById("teacherCode").value = savedTeacherCode;
 }
 
-document.getElementById("teacherLoginForm").addEventListener("submit", e => {
+document.getElementById("teacherLoginForm").addEventListener("submit", function(e){
   e.preventDefault();
-  loadSubmissions();
+  loadTeacherView(true);
+});
+
+document.getElementById("newClassName").addEventListener("keydown", function(e){
+  if(e.key === "Enter"){
+    e.preventDefault();
+    createClass();
+  }
 });
 </script>
 </body>
