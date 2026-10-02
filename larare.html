@@ -159,6 +159,49 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_hotW6b95wxfjSf-waPmgHw_y8AiYzT1
 window.__rows = [];
 window.__classes = [];
 
+const LOCAL_CLASSES_KEY = "teacherClassesV1";
+const LOCAL_CLASS_ASSIGNMENTS_KEY = "submissionClassAssignmentsV1";
+const LOCAL_CATEGORY_ASSIGNMENTS_KEY = "submissionCategoryAssignmentsV1";
+
+function readJsonStorage(key, fallback){
+  try{
+    const value = JSON.parse(localStorage.getItem(key) || "");
+    return value == null ? fallback : value;
+  }catch{
+    return fallback;
+  }
+}
+
+function writeJsonStorage(key, value){
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function loadLocalClasses(){
+  const classes = readJsonStorage(LOCAL_CLASSES_KEY, []);
+  return Array.isArray(classes) ? classes : [];
+}
+
+function hydrateLocalRows(rows){
+  const classAssignments = readJsonStorage(LOCAL_CLASS_ASSIGNMENTS_KEY, {});
+  const categoryAssignments = readJsonStorage(LOCAL_CATEGORY_ASSIGNMENTS_KEY, {});
+  const classes = loadLocalClasses();
+
+  return (rows || []).map(function(r){
+    const classId = classAssignments[r.id] || "";
+    const cls = classes.find(function(c){ return c.id === classId; });
+    return Object.assign({}, r, {
+      class_id: classId || null,
+      class_name: cls ? cls.name : null,
+      teacher_category: categoryAssignments[r.id] || r.teacher_category || null
+    });
+  });
+}
+
+function makeLocalId(){
+  if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return "local-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+}
+
 function esc(s){
   return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
     return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
@@ -206,42 +249,19 @@ async function loadTeacherView(showLoading){
   if(showLoading !== false) setStatus("Hämtar...", "");
 
   try{
-    let classes = [];
-    let rows = [];
-    let classFeaturesReady = true;
+    const rows = await rpc("get_app_ide_submissions", {p_code:code});
 
-    try{
-      const results = await Promise.all([
-        rpc("get_teacher_classes", {p_code:code}),
-        rpc("get_app_ide_submissions", {p_code:code})
-      ]);
-      classes = Array.isArray(results[0]) ? results[0] : [];
-      rows = Array.isArray(results[1]) ? results[1] : [];
-    }catch(classErr){
-      console.warn("Klassfunktionerna är inte aktiverade ännu.", classErr);
-      classFeaturesReady = false;
-      rows = await rpc("get_app_ide_submissions", {p_code:code});
-      rows = Array.isArray(rows) ? rows : [];
-    }
-
-    window.__classes = classes;
-    window.__rows = rows;
+    window.__classes = loadLocalClasses();
+    window.__rows = hydrateLocalRows(Array.isArray(rows) ? rows : []);
 
     document.getElementById("teacherView").classList.remove("hidden");
-    document.getElementById("classManager").classList.toggle("hidden", !classFeaturesReady);
-
     renderClassManager();
     renderRows(window.__rows);
-
-    if(classFeaturesReady){
-      setStatus("Inloggad.", "ok");
-    }else{
-      setStatus("Inloggad. Kör den uppdaterade teacher_view_setup.sql i Supabase för att aktivera klasser.", "error");
-    }
+    setStatus("Inloggad.", "ok");
   }catch(err){
     console.error(err);
     document.getElementById("teacherView").classList.add("hidden");
-    setStatus("Fel lärarkod eller lärarvyn är inte aktiverad.", "error");
+    setStatus("Fel lärarkod eller lärarvyn kunde inte hämta arbetena.", "error");
   }
 }
 
@@ -284,36 +304,28 @@ function showClassTab(id){
   renderRows(window.__rows || []);
 }
 
-async function moveAllSubmissionsToClass(classId){
-  const c = (window.__classes || []).find(function(x){ return x.id === classId; });
+function moveAllSubmissionsToClass(classId){
+  const cls = (window.__classes || []).find(function(x){ return x.id === classId; });
   const rows = window.__rows || [];
-  if(!c || !rows.length) return;
+  if(!cls || !rows.length) return;
 
-  if(!confirm("Flytta ALLA " + rows.length + " arbeten till fliken " + c.name + "?\n\nDetta ändrar klassfliken för alla arbeten.")){
+  if(!confirm("Flytta ALLA " + rows.length + " arbeten till fliken " + cls.name + "?\n\nDetta ändrar klassfliken för alla arbeten.")){
     return;
   }
 
-  try{
-    setStatus("Flyttar alla arbeten till " + c.name + "...", "");
+  const assignments = readJsonStorage(LOCAL_CLASS_ASSIGNMENTS_KEY, {});
+  rows.forEach(function(r){
+    assignments[r.id] = classId;
+  });
 
-    for(const r of rows){
-      await rpc("set_submission_class", {
-        p_code:teacherCode(),
-        p_submission_id:r.id,
-        p_class_id:classId
-      });
-    }
-
-    await loadTeacherView(false);
-    showClassTab(classId);
-    setStatus("Alla arbeten flyttades till " + c.name + ".", "ok");
-  }catch(err){
-    console.error(err);
-    setStatus("Kunde inte flytta alla arbeten. Försök igen.", "error");
-  }
+  writeJsonStorage(LOCAL_CLASS_ASSIGNMENTS_KEY, assignments);
+  window.__rows = hydrateLocalRows(rows);
+  renderRows(window.__rows);
+  showClassTab(classId);
+  setStatus("Alla arbeten flyttades till " + cls.name + ".", "ok");
 }
 
-async function createClass(){
+function createClass(){
   const input = document.getElementById("newClassName");
   const name = input.value.trim();
 
@@ -322,23 +334,37 @@ async function createClass(){
     return;
   }
 
-  try{
-    setStatus("Skapar klass...", "");
-    await rpc("create_teacher_class", {p_code:teacherCode(), p_name:name});
-    input.value = "";
-    await loadTeacherView(false);
-    setStatus("Klassen skapades.", "ok");
-  }catch(err){
-    console.error(err);
-    setStatus("Kunde inte skapa klassen. Kontrollera att namnet inte redan finns.", "error");
+  const classes = loadLocalClasses();
+  const exists = classes.some(function(c){
+    return c.name.trim().toLocaleLowerCase("sv-SE") === name.toLocaleLowerCase("sv-SE");
+  });
+
+  if(exists){
+    setStatus("Det finns redan en klassflik med det namnet.", "error");
+    return;
   }
+
+  classes.push({
+    id: makeLocalId(),
+    name:name,
+    created_at:new Date().toISOString()
+  });
+
+  writeJsonStorage(LOCAL_CLASSES_KEY, classes);
+  input.value = "";
+  window.__classes = classes;
+  window.__rows = hydrateLocalRows(window.__rows);
+  renderClassManager();
+  renderRows(window.__rows);
+  setStatus("Klassfliken skapades.", "ok");
 }
 
-async function renameClass(id){
-  const c = (window.__classes || []).find(function(x){ return x.id === id; });
-  if(!c) return;
+function renameClass(id){
+  const classes = loadLocalClasses();
+  const cls = classes.find(function(x){ return x.id === id; });
+  if(!cls) return;
 
-  const name = prompt("Nytt namn på klassen:", c.name);
+  const name = prompt("Nytt namn på klassfliken:", cls.name);
   if(name == null) return;
 
   const clean = name.trim();
@@ -347,32 +373,74 @@ async function renameClass(id){
     return;
   }
 
-  try{
-    setStatus("Ändrar klassnamn...", "");
-    await rpc("rename_teacher_class", {p_code:teacherCode(), p_id:id, p_name:clean});
-    await loadTeacherView(false);
-    setStatus("Klassnamnet ändrades.", "ok");
-  }catch(err){
-    console.error(err);
-    setStatus("Kunde inte ändra klassnamnet.", "error");
+  const duplicate = classes.some(function(c){
+    return c.id !== id &&
+      c.name.trim().toLocaleLowerCase("sv-SE") === clean.toLocaleLowerCase("sv-SE");
+  });
+
+  if(duplicate){
+    setStatus("Det finns redan en klassflik med det namnet.", "error");
+    return;
   }
+
+  cls.name = clean;
+  writeJsonStorage(LOCAL_CLASSES_KEY, classes);
+  window.__classes = classes;
+  window.__rows = hydrateLocalRows(window.__rows);
+  renderClassManager();
+  renderRows(window.__rows);
+  setStatus("Klassnamnet ändrades.", "ok");
 }
 
-async function deleteClass(id){
-  const c = (window.__classes || []).find(function(x){ return x.id === id; });
-  if(!c) return;
+function deleteClass(id){
+  const classes = loadLocalClasses();
+  const cls = classes.find(function(x){ return x.id === id; });
+  if(!cls) return;
 
-  if(!confirm("Radera klassen " + c.name + "?\n\nArbetena raderas inte. De flyttas till Ingen klass.")) return;
+  if(!confirm("Radera fliken " + cls.name + "?\n\nArbetena raderas inte. De flyttas till Ingen klass.")) return;
 
-  try{
-    setStatus("Raderar klass...", "");
-    await rpc("delete_teacher_class", {p_code:teacherCode(), p_id:id});
-    await loadTeacherView(false);
-    setStatus("Klassen raderades. Arbetena ligger nu under Ingen klass.", "ok");
-  }catch(err){
-    console.error(err);
-    setStatus("Kunde inte radera klassen.", "error");
+  const remaining = classes.filter(function(c){ return c.id !== id; });
+  const assignments = readJsonStorage(LOCAL_CLASS_ASSIGNMENTS_KEY, {});
+
+  Object.keys(assignments).forEach(function(submissionId){
+    if(assignments[submissionId] === id){
+      delete assignments[submissionId];
+    }
+  });
+
+  writeJsonStorage(LOCAL_CLASSES_KEY, remaining);
+  writeJsonStorage(LOCAL_CLASS_ASSIGNMENTS_KEY, assignments);
+
+  window.__classes = remaining;
+  window.__rows = hydrateLocalRows(window.__rows);
+  renderClassManager();
+  renderRows(window.__rows);
+  setStatus("Fliken raderades. Arbetena ligger nu under Ingen klass.", "ok");
+}
+
+function changeSubmissionClass(id, value){
+  const assignments = readJsonStorage(LOCAL_CLASS_ASSIGNMENTS_KEY, {});
+
+  if(value){
+    assignments[id] = value;
+  }else{
+    delete assignments[id];
   }
+
+  writeJsonStorage(LOCAL_CLASS_ASSIGNMENTS_KEY, assignments);
+  window.__rows = hydrateLocalRows(window.__rows);
+  renderRows(window.__rows);
+  setStatus("Arbetet flyttades till vald klassflik.", "ok");
+}
+
+function changeSubmissionCategory(id, value){
+  const assignments = readJsonStorage(LOCAL_CATEGORY_ASSIGNMENTS_KEY, {});
+  assignments[id] = value;
+  writeJsonStorage(LOCAL_CATEGORY_ASSIGNMENTS_KEY, assignments);
+
+  window.__rows = hydrateLocalRows(window.__rows);
+  renderRows(window.__rows);
+  setStatus("Arbetets typ ändrades.", "ok");
 }
 
 function uniqueMembers(r){
