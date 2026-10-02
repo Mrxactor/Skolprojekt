@@ -463,37 +463,6 @@ function categoryFor(r){
   return uniqueMembers(r).length >= 2 ? "group" : "individual";
 }
 
-async function changeSubmissionClass(id, value){
-  try{
-    setStatus("Flyttar arbete...", "");
-    await rpc("set_submission_class", {
-      p_code:teacherCode(),
-      p_submission_id:id,
-      p_class_id:value || null
-    });
-    await loadTeacherView(false);
-    setStatus("Arbetet flyttades till vald klass.", "ok");
-  }catch(err){
-    console.error(err);
-    setStatus("Kunde inte flytta arbetet.", "error");
-  }
-}
-
-async function changeSubmissionCategory(id, value){
-  try{
-    setStatus("Ändrar typ...", "");
-    await rpc("set_submission_category", {
-      p_code:teacherCode(),
-      p_submission_id:id,
-      p_category:value
-    });
-    await loadTeacherView(false);
-    setStatus("Arbetets typ ändrades.", "ok");
-  }catch(err){
-    console.error(err);
-    setStatus("Kunde inte ändra arbetets typ.", "error");
-  }
-}
 
 function classOptions(selectedId){
   const classes = window.__classes || [];
