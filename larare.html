@@ -89,6 +89,7 @@
             <div id="count" class="meta"></div>
           </div>
           <div class="actions" style="margin:0">
+            <button class="primary" onclick="downloadAllSubmissions()">💾 Spara alla arbeten</button>
             <button class="secondary" onclick="loadSubmissions()">↻ Uppdatera</button>
           </div>
         </div>
@@ -182,6 +183,76 @@ function renderRows(rows){
   }).join("");
 
   window.__rows = rows;
+}
+
+function downloadAllSubmissions(){
+  const rows = window.__rows || [];
+
+  if(!rows.length){
+    alert("Det finns inga arbeten att spara ännu.");
+    return;
+  }
+
+  const lines = [
+    "APP-IDÉER – ALLA ELEVARBETEN",
+    "Exporterad: " + new Date().toLocaleString("sv-SE"),
+    "Antal arbeten: " + rows.length,
+    "",
+    "=".repeat(70),
+    ""
+  ];
+
+  rows.forEach((r, i) => {
+    const members = [r.member_1, r.member_2, r.member_3].filter(Boolean).join(", ");
+    const when = r.created_at ? new Date(r.created_at).toLocaleString("sv-SE") : "Ej angivet";
+
+    lines.push(
+      "ARBETE " + (i + 1),
+      "Grupp/Namn: " + (r.group_name || "Ej angivet"),
+      "Deltagare: " + (members || "Ej angivet"),
+      "Appnamn: " + (r.app_name || "Inte bestämt ännu"),
+      "Inskickat: " + when,
+      "",
+      "IDÉ:",
+      r.idea || "Ej angivet",
+      "",
+      "MÅLGRUPP:",
+      r.target_users || "Ej angivet",
+      "",
+      "PROBLEM SOM APPEN SKA LÖSA:",
+      r.problem || "Ej angivet",
+      "",
+      "FUNKTIONER:",
+      r.features || "Ej angivet",
+      "",
+      "STIL:",
+      r.style || "Ej angivet",
+      "",
+      "FÄRGER:",
+      r.colors || "Ej angivet",
+      "",
+      "FÄRDIG APP-PROMPT:",
+      r.prompt_text || "Ej angivet",
+      "",
+      "=".repeat(70),
+      ""
+    );
+  });
+
+  const blob = new Blob(["\uFEFF" + lines.join("\n")], {
+    type: "text/plain;charset=utf-8"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const date = new Date().toISOString().slice(0, 10);
+
+  a.href = url;
+  a.download = "app-ide-elevarbeten-" + date + ".txt";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 async function copyPrompt(i){
