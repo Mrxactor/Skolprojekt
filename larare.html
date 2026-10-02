@@ -533,7 +533,12 @@ function renderCategory(title, items, allRows, extraButtonHtml){
 function renderClassSection(title, rows, allRows, classKey){
   const individual = rows.filter(function(r){ return categoryFor(r) === "individual"; });
   const groups = rows.filter(function(r){ return categoryFor(r) === "group"; });
-  const zipButton = groups.length
+
+  const individualZipButton = individual.length
+    ? '<button class="primary" type="button" onclick="downloadIndividualPromptsZip(\'' + classKey + '\')">📦 Ladda ner alla individuella (.zip)</button>'
+    : '';
+
+  const groupZipButton = groups.length
     ? '<button class="primary" type="button" onclick="downloadGroupPromptsZip(\'' + classKey + '\')">📦 Ladda ner alla grupparbeten (.zip)</button>'
     : '';
 
@@ -541,8 +546,8 @@ function renderClassSection(title, rows, allRows, classKey){
     '<div class="class-heading"><h2>🏫 ' + esc(title) + '</h2><span class="meta">' +
       (rows.length === 1 ? "1 arbete" : rows.length + " arbeten") +
     '</span></div>' +
-    renderCategory("👤 Individuella arbeten", individual, allRows, "") +
-    renderCategory("👥 Grupparbeten", groups, allRows, zipButton) +
+    renderCategory("👤 Individuella arbeten", individual, allRows, individualZipButton) +
+    renderCategory("👥 Grupparbeten", groups, allRows, groupZipButton) +
   '</section>';
 }
 
@@ -601,6 +606,111 @@ function renderRows(rows){
   });
 
   root.innerHTML = html || '<div class="card empty">Inga arbeten att visa.</div>';
+}
+
+async function downloadIndividualPromptsZip(classKey){
+  const rows = (window.__rows || []).filter(function(r){
+    const inClass = classKey === "unassigned" ? !r.class_id : r.class_id === classKey;
+    return inClass && categoryFor(r) === "individual";
+  });
+
+  if(!rows.length){
+    alert("Det finns inga individuella arbeten i den här fliken.");
+    return;
+  }
+
+  if(typeof JSZip === "undefined"){
+    alert("ZIP-funktionen kunde inte laddas. Ladda om sidan och försök igen.");
+    return;
+  }
+
+  try{
+    setStatus("Skapar ZIP med individuella arbeten...", "");
+    const zip = new JSZip();
+
+    function safeName(value){
+      return String(value || "utan-namn")
+        .trim()
+        .replace(/[\\/:*?"<>|]/g, "-")
+        .replace(/\s+/g, " ")
+        .slice(0, 80) || "utan-namn";
+    }
+
+    const selectedClass = classKey === "unassigned"
+      ? null
+      : (window.__classes || []).find(function(c){ return c.id === classKey; });
+    const className = selectedClass ? selectedClass.name : "Ingen klass";
+
+    rows.forEach(function(r, i){
+      const members = uniqueMembers(r).join(", ");
+      const title = safeName(r.app_name || r.group_name || ("individuellt-" + (i + 1)));
+      const person = safeName(r.member_1 || r.group_name || ("elev-" + (i + 1)));
+
+      const text = [
+        "INDIVIDUELLT ARBETE – APP-IDÉ / PROMPT",
+        "Klass: " + className,
+        "Namn: " + (r.group_name || r.member_1 || "Ej angivet"),
+        "Deltagare: " + (members || "Ej angivet"),
+        "Appnamn: " + (r.app_name || "Inte bestämt ännu"),
+        "",
+        "IDÉ:",
+        r.idea || "Ej angivet",
+        "",
+        "MÅLGRUPP:",
+        r.target_users || "Ej angivet",
+        "",
+        "PROBLEM SOM APPEN SKA LÖSA:",
+        r.problem || "Ej angivet",
+        "",
+        "FUNKTIONER:",
+        r.features || "Ej angivet",
+        "",
+        "STIL:",
+        r.style || "Ej angivet",
+        "",
+        "FÄRGER:",
+        r.colors || "Ej angivet",
+        "",
+        "FÄRDIG APP-PROMPT:",
+        r.prompt_text || "Ej angivet"
+      ].join("\n");
+
+      zip.file(
+        String(i + 1).padStart(2, "0") + " - " + person + " - " + title + ".txt",
+        "\uFEFF" + text
+      );
+    });
+
+    const overview = [
+      "INDIVIDUELLA ARBETEN – " + className,
+      "Exporterad: " + new Date().toLocaleString("sv-SE"),
+      "Antal individuella arbeten: " + rows.length,
+      "",
+      ...rows.map(function(r, i){
+        return (i + 1) + ". " + (r.group_name || r.member_1 || "Ej angivet") + " – " +
+          (r.app_name || "Inte bestämt ännu");
+      })
+    ].join("\n");
+
+    zip.file("00 - Oversikt.txt", "\uFEFF" + overview);
+
+    const blob = await zip.generateAsync({type:"blob"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const date = new Date().toISOString().slice(0, 10);
+
+    a.href = url;
+    a.download = "individuella-" + safeName(className) + "-" + date + ".zip";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    setStatus("ZIP-filen med individuella arbeten är skapad.", "ok");
+  }catch(err){
+    console.error(err);
+    setStatus("Kunde inte skapa ZIP-filen med individuella arbeten.", "error");
+  }
 }
 
 async function downloadGroupPromptsZip(classKey){
