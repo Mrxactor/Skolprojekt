@@ -204,22 +204,42 @@ async function loadTeacherView(showLoading){
   if(showLoading !== false) setStatus("Hämtar...", "");
 
   try{
-    const results = await Promise.all([
-      rpc("get_teacher_classes", {p_code:code}),
-      rpc("get_app_ide_submissions", {p_code:code})
-    ]);
+    let classes = [];
+    let rows = [];
+    let classFeaturesReady = true;
 
-    window.__classes = Array.isArray(results[0]) ? results[0] : [];
-    window.__rows = Array.isArray(results[1]) ? results[1] : [];
+    try{
+      const results = await Promise.all([
+        rpc("get_teacher_classes", {p_code:code}),
+        rpc("get_app_ide_submissions", {p_code:code})
+      ]);
+      classes = Array.isArray(results[0]) ? results[0] : [];
+      rows = Array.isArray(results[1]) ? results[1] : [];
+    }catch(classErr){
+      console.warn("Klassfunktionerna är inte aktiverade ännu.", classErr);
+      classFeaturesReady = false;
+      rows = await rpc("get_app_ide_submissions", {p_code:code});
+      rows = Array.isArray(rows) ? rows : [];
+    }
+
+    window.__classes = classes;
+    window.__rows = rows;
 
     document.getElementById("teacherView").classList.remove("hidden");
+    document.getElementById("classManager").classList.toggle("hidden", !classFeaturesReady);
+
     renderClassManager();
     renderRows(window.__rows);
-    setStatus("Inloggad.", "ok");
+
+    if(classFeaturesReady){
+      setStatus("Inloggad.", "ok");
+    }else{
+      setStatus("Inloggad. Kör den uppdaterade teacher_view_setup.sql i Supabase för att aktivera klasser.", "error");
+    }
   }catch(err){
     console.error(err);
     document.getElementById("teacherView").classList.add("hidden");
-    setStatus("Fel lärarkod eller klassfunktionen är inte aktiverad i Supabase ännu.", "error");
+    setStatus("Fel lärarkod eller lärarvyn är inte aktiverad.", "error");
   }
 }
 
