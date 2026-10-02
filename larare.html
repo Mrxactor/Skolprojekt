@@ -43,6 +43,8 @@
     .topline{
       display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap
     }
+    .section-title{margin:28px 0 8px;font-size:1.6rem;font-weight:800}
+    .section-count{color:var(--muted);font-size:.95rem;margin-bottom:8px}
     .group-title{font-size:1.35rem;font-weight:800}
     .meta{color:var(--muted);font-size:.95rem;line-height:1.5;margin-top:6px}
     .prompt{
@@ -85,7 +87,7 @@
       <div class="card">
         <div class="topline">
           <div>
-            <h2 style="margin:0">Inskickade grupper</h2>
+            <h2 style="margin:0">Inskickade arbeten</h2>
             <div id="count" class="meta"></div>
           </div>
           <div class="actions" style="margin:0">
@@ -152,22 +154,51 @@ async function loadSubmissions(){
 
 function renderRows(rows){
   const root = document.getElementById("submissions");
+
+  function uniqueMembers(r){
+    const seen = new Set();
+    return [r.member_1, r.member_2, r.member_3]
+      .map(v => String(v || "").trim())
+      .filter(Boolean)
+      .filter(name => {
+        const key = name.toLocaleLowerCase("sv-SE");
+        if(seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }
+
+  const indexedRows = rows.map((r, i) => ({
+    row: r,
+    originalIndex: i,
+    memberCount: uniqueMembers(r).length
+  }));
+
+  const individual = indexedRows.filter(x => x.memberCount < 2);
+  const groups = indexedRows.filter(x => x.memberCount >= 2);
+
   document.getElementById("count").textContent =
-    rows.length === 1 ? "1 grupp" : rows.length + " grupper";
+    individual.length + " individuella • " + groups.length + " grupparbeten";
+
+  window.__rows = rows;
 
   if(!rows.length){
-    root.innerHTML = '<div class="card empty">Inga grupper har skickat in ännu.</div>';
+    root.innerHTML = '<div class="card empty">Inga arbeten har skickats in ännu.</div>';
     return;
   }
 
-  root.innerHTML = rows.map((r,i) => {
-    const members = [r.member_1,r.member_2,r.member_3].filter(Boolean).join(", ");
+  function renderCard(item){
+    const r = item.row;
+    const i = item.originalIndex;
+    const members = uniqueMembers(r).join(", ");
     const when = r.created_at ? new Date(r.created_at).toLocaleString("sv-SE") : "";
+    const fallbackName = item.memberCount >= 2 ? ("Grupp " + (i+1)) : (r.member_1 || ("Elev " + (i+1)));
+
     return `
       <article class="card submission">
         <div class="topline">
           <div>
-            <div class="group-title">${esc(r.group_name || ("Grupp " + (i+1)))}</div>
+            <div class="group-title">${esc(r.group_name || fallbackName)}</div>
             <div class="meta">
               <strong>Deltagare:</strong> ${esc(members || "Ej angivet")}<br>
               <strong>App:</strong> ${esc(r.app_name || "Inte bestämt ännu")}
@@ -176,14 +207,27 @@ function renderRows(rows){
           </div>
           <div class="actions" style="margin:0">
             <button class="secondary" onclick="copyPrompt(${i})">📋 Kopiera prompt</button>
-            <button class="secondary" onclick="deleteSubmission('${r.id}', '${esc(r.group_name || ("Grupp " + (i+1))).replace(/'/g,"&#39;")}')">🗑️ Radera</button>
+            <button class="secondary" onclick="deleteSubmission('${r.id}', '${esc(r.group_name || fallbackName).replace(/'/g,"&#39;")}')">🗑️ Radera</button>
           </div>
         </div>
         <div class="prompt" id="prompt-${i}">${esc(r.prompt_text || "")}</div>
       </article>`;
-  }).join("");
+  }
 
-  window.__rows = rows;
+  function renderSection(title, items, emptyText){
+    return `
+      <section>
+        <div class="section-title">${title}</div>
+        <div class="section-count">${items.length === 1 ? "1 arbete" : items.length + " arbeten"}</div>
+        ${items.length
+          ? items.map(renderCard).join("")
+          : '<div class="card empty">' + emptyText + '</div>'}
+      </section>`;
+  }
+
+  root.innerHTML =
+    renderSection("👤 Individuella arbeten", individual, "Inga individuella arbeten ännu.") +
+    renderSection("👥 Grupparbeten", groups, "Inga grupparbeten ännu.");
 }
 
 async function downloadAllPromptsZip(){
