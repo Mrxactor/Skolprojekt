@@ -14,7 +14,7 @@ create table if not exists private.teacher_settings (
 insert into private.teacher_settings (id, code_hash)
 values (
   1,
-  '99399ff882ea2711d75cf2e8ea7b937f175a4bbe1a58ad71c9cd5338b7272249'
+  '37950e68c16d166df473babf95ea690bcde08b31c1e9c9c1664de4405392ca66'
 )
 on conflict (id)
 do update set code_hash = excluded.code_hash;
