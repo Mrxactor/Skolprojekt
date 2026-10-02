@@ -89,7 +89,7 @@
             <div id="count" class="meta"></div>
           </div>
           <div class="actions" style="margin:0">
-            <button class="primary" onclick="downloadAllSubmissions()">💾 Spara alla arbeten</button>
+            <button class="primary" onclick="downloadAllPromptsZip()">📦 Ladda ner alla promptar (.zip)</button>
             <button class="secondary" onclick="loadSubmissions()">↻ Uppdatera</button>
           </div>
         </div>
@@ -98,6 +98,7 @@
     </section>
   </div>
 
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 const SUPABASE_URL = "https://mtybxohrlwprlgmudnsg.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_hotW6b95wxfjSf-waPmgHw_y8AiYzT1";
@@ -185,74 +186,106 @@ function renderRows(rows){
   window.__rows = rows;
 }
 
-function downloadAllSubmissions(){
+async function downloadAllPromptsZip(){
   const rows = window.__rows || [];
 
   if(!rows.length){
-    alert("Det finns inga arbeten att spara ännu.");
+    alert("Det finns inga promptar att ladda ner ännu.");
     return;
   }
 
-  const lines = [
-    "APP-IDÉER – ALLA ELEVARBETEN",
-    "Exporterad: " + new Date().toLocaleString("sv-SE"),
-    "Antal arbeten: " + rows.length,
-    "",
-    "=".repeat(70),
-    ""
-  ];
+  if(typeof JSZip === "undefined"){
+    alert("ZIP-funktionen kunde inte laddas. Ladda om sidan och försök igen.");
+    return;
+  }
 
-  rows.forEach((r, i) => {
-    const members = [r.member_1, r.member_2, r.member_3].filter(Boolean).join(", ");
-    const when = r.created_at ? new Date(r.created_at).toLocaleString("sv-SE") : "Ej angivet";
+  const status = document.getElementById("status");
+  status.className = "";
+  status.textContent = "Skapar ZIP-fil...";
 
-    lines.push(
-      "ARBETE " + (i + 1),
-      "Grupp/Namn: " + (r.group_name || "Ej angivet"),
-      "Deltagare: " + (members || "Ej angivet"),
-      "Appnamn: " + (r.app_name || "Inte bestämt ännu"),
-      "Inskickat: " + when,
-      "",
-      "IDÉ:",
-      r.idea || "Ej angivet",
-      "",
-      "MÅLGRUPP:",
-      r.target_users || "Ej angivet",
-      "",
-      "PROBLEM SOM APPEN SKA LÖSA:",
-      r.problem || "Ej angivet",
-      "",
-      "FUNKTIONER:",
-      r.features || "Ej angivet",
-      "",
-      "STIL:",
-      r.style || "Ej angivet",
-      "",
-      "FÄRGER:",
-      r.colors || "Ej angivet",
-      "",
-      "FÄRDIG APP-PROMPT:",
-      r.prompt_text || "Ej angivet",
-      "",
-      "=".repeat(70),
-      ""
-    );
-  });
+  try{
+    const zip = new JSZip();
 
-  const blob = new Blob(["\uFEFF" + lines.join("\n")], {
-    type: "text/plain;charset=utf-8"
-  });
+    function safeName(value){
+      return String(value || "utan-namn")
+        .trim()
+        .replace(/[\\/:*?"<>|]/g, "-")
+        .replace(/\s+/g, " ")
+        .slice(0, 80) || "utan-namn";
+    }
 
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const date = new Date().toISOString().slice(0, 10);
+    rows.forEach((r, i) => {
+      const members = [r.member_1, r.member_2, r.member_3].filter(Boolean).join(", ");
+      const title = safeName(r.app_name || r.group_name || ("arbete-" + (i + 1)));
+      const group = safeName(r.group_name || ("grupp-" + (i + 1)));
 
-  a.href = url;
-  a.download = "app-ide-elevarbeten-" + date + ".txt";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+      const text = [
+        "APP-IDÉ / PROMPT",
+        "Grupp/Namn: " + (r.group_name || "Ej angivet"),
+        "Deltagare: " + (members || "Ej angivet"),
+        "Appnamn: " + (r.app_name || "Inte bestämt ännu"),
+        "",
+        "IDÉ:",
+        r.idea || "Ej angivet",
+        "",
+        "MÅLGRUPP:",
+        r.target_users || "Ej angivet",
+        "",
+        "PROBLEM SOM APPEN SKA LÖSA:",
+        r.problem || "Ej angivet",
+        "",
+        "FUNKTIONER:",
+        r.features || "Ej angivet",
+        "",
+        "STIL:",
+        r.style || "Ej angivet",
+        "",
+        "FÄRGER:",
+        r.colors || "Ej angivet",
+        "",
+        "FÄRDIG APP-PROMPT:",
+        r.prompt_text || "Ej angivet"
+      ].join("\n");
+
+      zip.file(
+        String(i + 1).padStart(2, "0") + " - " + group + " - " + title + ".txt",
+        "\uFEFF" + text
+      );
+    });
+
+    const summary = [
+      "ALLA APP-IDÉER / PROMPTAR",
+      "Exporterad: " + new Date().toLocaleString("sv-SE"),
+      "Antal arbeten: " + rows.length,
+      "",
+      ...rows.map((r, i) =>
+        (i + 1) + ". " +
+        (r.group_name || "Ej angivet") + " – " +
+        (r.app_name || "Inte bestämt ännu")
+      )
+    ].join("\n");
+
+    zip.file("00 - Oversikt.txt", "\uFEFF" + summary);
+
+    const blob = await zip.generateAsync({type:"blob"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const date = new Date().toISOString().slice(0, 10);
+
+    a.href = url;
+    a.download = "alla-app-promptar-" + date + ".zip";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    status.className = "ok";
+    status.textContent = "ZIP-filen med alla promptar är skapad.";
+  }catch(err){
+    console.error(err);
+    status.className = "error";
+    status.textContent = "Kunde inte skapa ZIP-filen.";
+  }
 }
 
 async function copyPrompt(i){
