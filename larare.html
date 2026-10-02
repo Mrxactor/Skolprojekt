@@ -61,6 +61,8 @@
     }
     .class-heading h2{margin:0;font-size:1.55rem}
     .section-title{margin:20px 0 6px;font-size:1.15rem;font-weight:800}
+    .category-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:20px 0 6px}
+    .category-heading .section-title{margin:0}
     .section-count{color:var(--muted);font-size:.9rem;margin-bottom:6px}
     .submission{margin-top:12px}
     .group-title{font-size:1.25rem;font-weight:800}
@@ -125,14 +127,14 @@
       </div>
 
       <div class="card">
-        <h2>Klasser</h2>
-        <p class="meta">Skapa valfria klasser. Därefter kan du flytta varje arbete till rätt klass och ändra det när du vill.</p>
+        <h2>Klassflikar</h2>
+        <p class="meta">Skapa en flik, till exempel 5A. Du kan flytta enskilda arbeten eller alla arbeten till samma flik.</p>
         <div class="class-toolbar">
           <div>
-            <label for="newClassName">Ny klass</label>
+            <label for="newClassName">Ny klassflik</label>
             <div class="grid2">
               <input id="newClassName" maxlength="80" placeholder="Exempel: 4A, 4B eller Grupp Röd" />
-              <button class="primary" type="button" onclick="createClass()">+ Skapa klass</button>
+              <button class="primary" type="button" onclick="createClass()">+ Skapa flik</button>
             </div>
           </div>
           <div>
@@ -250,13 +252,15 @@ function renderClassManager(){
   const previous = filter.value || "all";
 
   if(!classes.length){
-    list.innerHTML = '<span class="meta">Inga klasser skapade ännu.</span>';
+    list.innerHTML = '<span class="meta">Inga klassflikar skapade ännu.</span>';
   }else{
     list.innerHTML = classes.map(function(c){
       return '<div class="class-chip">' +
-        '<strong>' + esc(c.name) + '</strong>' +
+        '<strong>📁 ' + esc(c.name) + '</strong>' +
         '<span>' +
-          '<button class="mini secondary" type="button" onclick="renameClass(\'' + c.id + '\')">✏️ Ändra</button> ' +
+          '<button class="mini secondary" type="button" onclick="showClassTab(\'' + c.id + '\')">Visa</button> ' +
+          '<button class="mini primary" type="button" onclick="moveAllSubmissionsToClass(\'' + c.id + '\')">Flytta alla hit</button> ' +
+          '<button class="mini secondary" type="button" onclick="renameClass(\'' + c.id + '\')">✏️ Ändra namn</button> ' +
           '<button class="mini danger" type="button" onclick="deleteClass(\'' + c.id + '\')">🗑️</button>' +
         '</span>' +
       '</div>';
@@ -264,7 +268,7 @@ function renderClassManager(){
   }
 
   filter.innerHTML =
-    '<option value="all">Alla klasser</option>' +
+    '<option value="all">Alla klassflikar</option>' +
     '<option value="unassigned">Ingen klass</option>' +
     classes.map(function(c){
       return '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>';
@@ -272,6 +276,41 @@ function renderClassManager(){
 
   const exists = Array.from(filter.options).some(function(o){ return o.value === previous; });
   filter.value = exists ? previous : "all";
+}
+
+function showClassTab(id){
+  const filter = document.getElementById("classFilter");
+  filter.value = id;
+  renderRows(window.__rows || []);
+}
+
+async function moveAllSubmissionsToClass(classId){
+  const c = (window.__classes || []).find(function(x){ return x.id === classId; });
+  const rows = window.__rows || [];
+  if(!c || !rows.length) return;
+
+  if(!confirm("Flytta ALLA " + rows.length + " arbeten till fliken " + c.name + "?\n\nDetta ändrar klassfliken för alla arbeten.")){
+    return;
+  }
+
+  try{
+    setStatus("Flyttar alla arbeten till " + c.name + "...", "");
+
+    for(const r of rows){
+      await rpc("set_submission_class", {
+        p_code:teacherCode(),
+        p_submission_id:r.id,
+        p_class_id:classId
+      });
+    }
+
+    await loadTeacherView(false);
+    showClassTab(classId);
+    setStatus("Alla arbeten flyttades till " + c.name + ".", "ok");
+  }catch(err){
+    console.error(err);
+    setStatus("Kunde inte flytta alla arbeten. Försök igen.", "error");
+  }
 }
 
 async function createClass(){
@@ -443,24 +482,30 @@ function renderCard(r, index){
   '</article>';
 }
 
-function renderCategory(title, items, allRows){
-  return '<div class="section-title">' + title + '</div>' +
+function renderCategory(title, items, allRows, extraButtonHtml){
+  return '<div class="category-heading">' +
+      '<div class="section-title">' + title + '</div>' +
+      (extraButtonHtml || '') +
+    '</div>' +
     '<div class="section-count">' + (items.length === 1 ? "1 arbete" : items.length + " arbeten") + '</div>' +
     (items.length
       ? items.map(function(r){ return renderCard(r, allRows.indexOf(r)); }).join("")
       : '<div class="card empty">Inga arbeten i den här delen.</div>');
 }
 
-function renderClassSection(title, rows, allRows){
+function renderClassSection(title, rows, allRows, classKey){
   const individual = rows.filter(function(r){ return categoryFor(r) === "individual"; });
   const groups = rows.filter(function(r){ return categoryFor(r) === "group"; });
+  const zipButton = groups.length
+    ? '<button class="primary" type="button" onclick="downloadGroupPromptsZip(\'' + classKey + '\')">📦 Ladda ner alla grupparbeten (.zip)</button>'
+    : '';
 
   return '<section class="class-section">' +
     '<div class="class-heading"><h2>🏫 ' + esc(title) + '</h2><span class="meta">' +
       (rows.length === 1 ? "1 arbete" : rows.length + " arbeten") +
     '</span></div>' +
-    renderCategory("👤 Individuella arbeten", individual, allRows) +
-    renderCategory("👥 Grupparbeten", groups, allRows) +
+    renderCategory("👤 Individuella arbeten", individual, allRows, "") +
+    renderCategory("👥 Grupparbeten", groups, allRows, zipButton) +
   '</section>';
 }
 
@@ -495,30 +540,135 @@ function renderRows(rows){
   }
 
   if(filterValue === "unassigned"){
-    root.innerHTML = renderClassSection("Ingen klass", visible, rows);
+    root.innerHTML = renderClassSection("Ingen klass", visible, rows, "unassigned");
     return;
   }
 
   if(filterValue !== "all"){
     const selectedClass = classes.find(function(c){ return c.id === filterValue; });
-    root.innerHTML = renderClassSection(selectedClass ? selectedClass.name : "Vald klass", visible, rows);
+    root.innerHTML = renderClassSection(selectedClass ? selectedClass.name : "Vald klass", visible, rows, filterValue);
     return;
   }
 
   let html = "";
   const unassigned = rows.filter(function(r){ return !r.class_id; });
   if(unassigned.length){
-    html += renderClassSection("Ingen klass", unassigned, rows);
+    html += renderClassSection("Ingen klass", unassigned, rows, "unassigned");
   }
 
   classes.forEach(function(c){
     const classRows = rows.filter(function(r){ return r.class_id === c.id; });
     if(classRows.length){
-      html += renderClassSection(c.name, classRows, rows);
+      html += renderClassSection(c.name, classRows, rows, c.id);
     }
   });
 
   root.innerHTML = html || '<div class="card empty">Inga arbeten att visa.</div>';
+}
+
+async function downloadGroupPromptsZip(classKey){
+  const rows = (window.__rows || []).filter(function(r){
+    const inClass = classKey === "unassigned" ? !r.class_id : r.class_id === classKey;
+    return inClass && categoryFor(r) === "group";
+  });
+
+  if(!rows.length){
+    alert("Det finns inga grupparbeten i den här fliken.");
+    return;
+  }
+
+  if(typeof JSZip === "undefined"){
+    alert("ZIP-funktionen kunde inte laddas. Ladda om sidan och försök igen.");
+    return;
+  }
+
+  try{
+    setStatus("Skapar ZIP med grupparbeten...", "");
+    const zip = new JSZip();
+
+    function safeName(value){
+      return String(value || "utan-namn")
+        .trim()
+        .replace(/[\\/:*?"<>|]/g, "-")
+        .replace(/\s+/g, " ")
+        .slice(0, 80) || "utan-namn";
+    }
+
+    const selectedClass = classKey === "unassigned"
+      ? null
+      : (window.__classes || []).find(function(c){ return c.id === classKey; });
+    const className = selectedClass ? selectedClass.name : "Ingen klass";
+
+    rows.forEach(function(r, i){
+      const members = uniqueMembers(r).join(", ");
+      const title = safeName(r.app_name || r.group_name || ("grupparbete-" + (i + 1)));
+      const group = safeName(r.group_name || ("grupp-" + (i + 1)));
+
+      const text = [
+        "GRUPPARBETE – APP-IDÉ / PROMPT",
+        "Klass: " + className,
+        "Grupp/Namn: " + (r.group_name || "Ej angivet"),
+        "Deltagare: " + (members || "Ej angivet"),
+        "Appnamn: " + (r.app_name || "Inte bestämt ännu"),
+        "",
+        "IDÉ:",
+        r.idea || "Ej angivet",
+        "",
+        "MÅLGRUPP:",
+        r.target_users || "Ej angivet",
+        "",
+        "PROBLEM SOM APPEN SKA LÖSA:",
+        r.problem || "Ej angivet",
+        "",
+        "FUNKTIONER:",
+        r.features || "Ej angivet",
+        "",
+        "STIL:",
+        r.style || "Ej angivet",
+        "",
+        "FÄRGER:",
+        r.colors || "Ej angivet",
+        "",
+        "FÄRDIG APP-PROMPT:",
+        r.prompt_text || "Ej angivet"
+      ].join("\n");
+
+      zip.file(
+        String(i + 1).padStart(2, "0") + " - " + group + " - " + title + ".txt",
+        "\uFEFF" + text
+      );
+    });
+
+    const overview = [
+      "GRUPPARBETEN – " + className,
+      "Exporterad: " + new Date().toLocaleString("sv-SE"),
+      "Antal grupparbeten: " + rows.length,
+      "",
+      ...rows.map(function(r, i){
+        return (i + 1) + ". " + (r.group_name || "Ej angivet") + " – " +
+          (r.app_name || "Inte bestämt ännu");
+      })
+    ].join("\n");
+
+    zip.file("00 - Oversikt.txt", "\uFEFF" + overview);
+
+    const blob = await zip.generateAsync({type:"blob"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const date = new Date().toISOString().slice(0, 10);
+
+    a.href = url;
+    a.download = "grupparbeten-" + safeName(className) + "-" + date + ".zip";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    setStatus("ZIP-filen med grupparbeten är skapad.", "ok");
+  }catch(err){
+    console.error(err);
+    setStatus("Kunde inte skapa ZIP-filen med grupparbeten.", "error");
+  }
 }
 
 async function downloadAllPromptsZip(){
