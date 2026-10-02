@@ -152,8 +152,37 @@ async function loadSubmissions(){
   }
 }
 
+const CATEGORY_OVERRIDE_KEY = "submissionCategoryOverrides";
+
+function getCategoryOverrides(){
+  try{
+    return JSON.parse(localStorage.getItem(CATEGORY_OVERRIDE_KEY) || "{}");
+  }catch{
+    return {};
+  }
+}
+
+function setCategoryOverride(id, category){
+  const overrides = getCategoryOverrides();
+  overrides[id] = category;
+  localStorage.setItem(CATEGORY_OVERRIDE_KEY, JSON.stringify(overrides));
+}
+
+function moveSubmission(id, category){
+  setCategoryOverride(id, category);
+  const rows = window.__rows || [];
+  renderRows(rows);
+
+  const status = document.getElementById("status");
+  status.className = "ok";
+  status.textContent = category === "group"
+    ? "Arbetet flyttades till Grupparbeten."
+    : "Arbetet flyttades till Individuella arbeten.";
+}
+
 function renderRows(rows){
   const root = document.getElementById("submissions");
+  const overrides = getCategoryOverrides();
 
   function uniqueMembers(r){
     const seen = new Set();
@@ -168,14 +197,22 @@ function renderRows(rows){
       });
   }
 
-  const indexedRows = rows.map((r, i) => ({
-    row: r,
-    originalIndex: i,
-    memberCount: uniqueMembers(r).length
-  }));
+  const indexedRows = rows.map((r, i) => {
+    const memberCount = uniqueMembers(r).length;
+    const automaticCategory = memberCount >= 2 ? "group" : "individual";
+    const category = overrides[r.id] || automaticCategory;
 
-  const individual = indexedRows.filter(x => x.memberCount < 2);
-  const groups = indexedRows.filter(x => x.memberCount >= 2);
+    return {
+      row: r,
+      originalIndex: i,
+      memberCount,
+      category,
+      automaticCategory
+    };
+  });
+
+  const individual = indexedRows.filter(x => x.category === "individual");
+  const groups = indexedRows.filter(x => x.category === "group");
 
   document.getElementById("count").textContent =
     individual.length + " individuella • " + groups.length + " grupparbeten";
@@ -192,7 +229,13 @@ function renderRows(rows){
     const i = item.originalIndex;
     const members = uniqueMembers(r).join(", ");
     const when = r.created_at ? new Date(r.created_at).toLocaleString("sv-SE") : "";
-    const fallbackName = item.memberCount >= 2 ? ("Grupp " + (i+1)) : (r.member_1 || ("Elev " + (i+1)));
+    const fallbackName = item.category === "group"
+      ? ("Grupp " + (i+1))
+      : (r.member_1 || ("Elev " + (i+1)));
+    const moveTarget = item.category === "group" ? "individual" : "group";
+    const moveLabel = item.category === "group"
+      ? "👤 Flytta till individuell"
+      : "👥 Flytta till grupp";
 
     return `
       <article class="card submission">
@@ -206,6 +249,7 @@ function renderRows(rows){
             </div>
           </div>
           <div class="actions" style="margin:0">
+            <button class="secondary" onclick="moveSubmission('${r.id}', '${moveTarget}')">${moveLabel}</button>
             <button class="secondary" onclick="copyPrompt(${i})">📋 Kopiera prompt</button>
             <button class="secondary" onclick="deleteSubmission('${r.id}', '${esc(r.group_name || fallbackName).replace(/'/g,"&#39;")}')">🗑️ Radera</button>
           </div>
